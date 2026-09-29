@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Mode RGB Channels (Linear & Vercel modern light aesthetic) */
+  --vault-dark-rgb: 255 255 255;
+  --vault-surface-rgb: 248 250 252;
+  --vault-elevated-rgb: 255 255 255;
+  --vault-border-rgb: 226 232 240;
+  --vault-border-hover-rgb: 203 213 225;
+  --vault-subtle-rgb: 241 245 249;
+  --vault-text-rgb: 15 23 42;
+  --vault-muted-rgb: 71 85 105;
+  --vault-dim-rgb: 100 116 139;
+
+  /* Standard Direct CSS Variables */
+  --vault-dark: rgb(var(--vault-dark-rgb));
+  --vault-surface: rgb(var(--vault-surface-rgb));
+  --vault-elevated: rgb(var(--vault-elevated-rgb));
+  --vault-border: rgb(var(--vault-border-rgb));
+  --vault-border-hover: rgb(var(--vault-border-hover-rgb));
+  --vault-subtle: rgb(var(--vault-subtle-rgb));
+  --vault-text: rgb(var(--vault-text-rgb));
+  --vault-muted: rgb(var(--vault-muted-rgb));
+  --vault-dim: rgb(var(--vault-dim-rgb));
+
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #4F46E5;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
+  --muted: #F8FAFC;
+  --muted-foreground: #64748B;
+  --accent: #06B6D4;
+  --accent-foreground: #0F172A;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #4F46E5;
+  --radius: 0.5rem;
+
+  --panel-bg: #FFFFFF;
+  --panel-border: #E2E8F0;
+  --hover-row-bg: rgba(241, 245, 249, 0.85);
+  --grid-pattern-dot: rgba(100, 116, 139, 0.15);
+}
+
+.dark {
+  /* Dark Mode RGB Channels (Obsidian & Quiet Intelligence) */
+  --vault-dark-rgb: 8 11 18;
+  --vault-surface-rgb: 13 17 26;
+  --vault-elevated-rgb: 17 24 39;
+  --vault-border-rgb: 30 38 56;
+  --vault-border-hover-rgb: 43 55 78;
+  --vault-subtle-rgb: 22 31 48;
+  --vault-text-rgb: 241 245 249;
+  --vault-muted-rgb: 148 163 184;
+  --vault-dim-rgb: 100 116 139;
+
+  /* Standard Direct CSS Variables */
+  --vault-dark: rgb(var(--vault-dark-rgb));
+  --vault-surface: rgb(var(--vault-surface-rgb));
+  --vault-elevated: rgb(var(--vault-elevated-rgb));
+  --vault-border: rgb(var(--vault-border-rgb));
+  --vault-border-hover: rgb(var(--vault-border-hover-rgb));
+  --vault-subtle: rgb(var(--vault-subtle-rgb));
+  --vault-text: rgb(var(--vault-text-rgb));
+  --vault-muted: rgb(var(--vault-muted-rgb));
+  --vault-dim: rgb(var(--vault-dim-rgb));
+
+  --background: #080B12;
+  --foreground: #F1F5F9;
+  --card: #0D111A;
+  --card-foreground: #F8FAFC;
+  --popover: #0D111A;
+  --popover-foreground: #F8FAFC;
+  --primary: #6366F1;
+  --primary-foreground: #FFFFFF;
+  --secondary: #161F30;
+  --secondary-foreground: #F8FAFC;
+  --muted: #111827;
+  --muted-foreground: #94A3B8;
+  --accent: #06B6D4;
+  --accent-foreground: #FFFFFF;
+  --border: #1E2638;
+  --input: #1E2638;
+  --ring: #6366F1;
+
+  --panel-bg: #0D111A;
+  --panel-border: #1E2638;
+  --hover-row-bg: rgba(22, 31, 48, 0.6);
+  --grid-pattern-dot: rgba(148, 163, 184, 0.08);
+}
+
+html {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Minimal Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+/* Linear-style subtle panels */
+.vault-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.75rem;
+}
+
+.vault-panel-subtle {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+}
+
+.vault-hover-row {
+  transition: all 0.15s ease-out;
+}
+.vault-hover-row:hover {
+  background: var(--hover-row-bg);
+}
+
+/* Micro dots background for graph and hero */
+.vault-grid-pattern {
+  background-image: radial-gradient(var(--grid-pattern-dot) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Soft technical glows (sparingly applied) */
+.glow-ai {
+  box-shadow: 0 0 25px -4px rgba(139, 92, 246, 0.2);
+}
+
+.glow-active {
+  box-shadow: 0 0 15px -3px rgba(99, 102, 241, 0.25);
+}
+
+/* Interactive focus ring */
+*:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.6);
+  outline-offset: 1px;
+}
