@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'KnowledgeVault AI | AI Knowledge Continuity System',
@@ -40,7 +41,9 @@ export default function RootLayout({
       </head>
       <body className="bg-vault-dark text-vault-text antialiased font-sans">
         <ThemeProvider>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

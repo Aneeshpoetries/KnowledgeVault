@@ -18,6 +18,7 @@ import {
   Check,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
+import { AccessForbidden } from '@/components/ui/AccessForbidden';
 import {
   RiskBadge,
   ConfidenceBadge,
@@ -34,12 +35,20 @@ export default function KnowledgeDetailPage() {
   const [relationships, setRelationships] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
+  const [isForbidden, setIsForbidden] = useState(false);
+  const [forbiddenMessage, setForbiddenMessage] = useState('');
 
   useEffect(() => {
     if (!id) return;
     fetch(`/api/knowledge/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
+      .then(async (res) => {
+        if (res.status === 403) {
+          const data = await res.json();
+          setIsForbidden(true);
+          setForbiddenMessage(data.message || 'This knowledge item is outside your workspace access scope.');
+          return;
+        }
+        const data = await res.json();
         if (data.item) {
           setItem(data.item);
           setRelationships(data.relationships || []);
@@ -75,6 +84,17 @@ export default function KnowledgeDetailPage() {
         <div className="py-24 text-center text-vault-dim font-mono text-xs">
           Loading organizational memory record...
         </div>
+      </AppShell>
+    );
+  }
+
+  if (isForbidden) {
+    return (
+      <AppShell>
+        <AccessForbidden
+          title="Access Restricted"
+          message={forbiddenMessage || 'This knowledge item is outside your workspace permissions.'}
+        />
       </AppShell>
     );
   }

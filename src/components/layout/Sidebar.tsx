@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -15,12 +15,17 @@ import {
   Layers,
   LogOut,
   Settings,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  CheckSquare,
+  PlusCircle,
+  BookOpen,
+  ShieldCheck,
 } from 'lucide-react';
 import { KnowledgeVaultLogo } from '../ui/KnowledgeVaultLogo';
+import { useAuth } from '@/context/AuthContext';
+import { UserRole } from '@/lib/types';
 
 interface SidebarProps {
   userRole?: string;
@@ -28,28 +33,120 @@ interface SidebarProps {
   userAvatar?: string;
 }
 
-export function Sidebar({ userRole = 'ADMIN', userName = 'Admin User', userAvatar }: SidebarProps) {
+export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: SidebarProps) {
   const pathname = usePathname();
+  const { user: authUser, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [pendingReviewCount, setPendingReviewCount] = useState<number>(0);
 
-  const primaryNav = [
-    { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Knowledge', href: '/knowledge', icon: Brain },
-    { label: 'Assistant', href: '/assistant', icon: Bot, isAi: true },
-    { label: 'Graph', href: '/graph', icon: Network },
-    { label: 'Coverage', href: '/coverage', icon: PieChart },
-    { label: 'Gaps', href: '/gaps', icon: ShieldAlert, hasBadge: true },
-  ];
+  const role: UserRole = (authUser?.role || propRole || 'ADMIN') as UserRole;
+  const name = authUser?.name || propName || 'User';
 
-  const workspaceNav = [
-    { label: 'Employees', href: '/employees', icon: Users },
-    { label: 'Projects', href: '/projects', icon: FolderGit2 },
-    { label: 'Sources', href: '/sources', icon: Layers },
-  ];
+  // Fetch pending reviews count for Admin and Manager
+  useEffect(() => {
+    if (role === 'ADMIN' || role === 'MANAGER') {
+      fetch('/api/reviews')
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.items)) {
+            setPendingReviewCount(data.items.length);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [role]);
+
+  // Role-specific navigation items
+  const getNavSections = () => {
+    if (role === 'ADMIN') {
+      return {
+        primary: [
+          { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+          { label: 'Knowledge Base', href: '/knowledge', icon: Brain },
+          {
+            label: 'Review Queue',
+            href: '/reviews',
+            icon: CheckSquare,
+            badge: pendingReviewCount > 0 ? String(pendingReviewCount) : undefined,
+          },
+          { label: 'Continuity AI', href: '/assistant', icon: Bot, isAi: true },
+          { label: 'Knowledge Graph', href: '/graph', icon: Network },
+          { label: 'Risk & Coverage', href: '/coverage', icon: PieChart },
+          { label: 'Continuity Gaps', href: '/gaps', icon: ShieldAlert, hasDot: true },
+        ],
+        workspaceTitle: 'Governance',
+        workspace: [
+          { label: 'Employees', href: '/employees', icon: Users },
+          { label: 'Projects', href: '/projects', icon: FolderGit2 },
+          { label: 'Sources', href: '/sources', icon: Layers },
+          { label: 'Exit Mode', href: '/exit-mode', icon: LogOut, isAccent: true },
+        ],
+      };
+    }
+
+    if (role === 'MANAGER') {
+      return {
+        primary: [
+          { label: 'Team Overview', href: '/dashboard', icon: LayoutDashboard },
+          { label: 'Knowledge Base', href: '/knowledge', icon: Brain },
+          {
+            label: 'Review Queue',
+            href: '/reviews',
+            icon: CheckSquare,
+            badge: pendingReviewCount > 0 ? String(pendingReviewCount) : undefined,
+          },
+          { label: 'Continuity AI', href: '/assistant', icon: Bot, isAi: true },
+          { label: 'Team Graph', href: '/graph', icon: Network },
+          { label: 'Team Coverage', href: '/coverage', icon: PieChart },
+          { label: 'Team Gaps', href: '/gaps', icon: ShieldAlert, hasDot: true },
+        ],
+        workspaceTitle: 'Team Workspace',
+        workspace: [
+          { label: 'Direct Reports', href: '/employees', icon: Users },
+          { label: 'Projects', href: '/projects', icon: FolderGit2 },
+          { label: 'Exit Mode', href: '/exit-mode', icon: LogOut, isAccent: true },
+        ],
+      };
+    }
+
+    if (role === 'EMPLOYEE') {
+      return {
+        primary: [
+          { label: 'My Knowledge', href: '/dashboard', icon: LayoutDashboard },
+          { label: 'Browse Records', href: '/knowledge', icon: Brain },
+          { label: 'Submit Knowledge', href: '/knowledge/new', icon: PlusCircle },
+          { label: 'Continuity AI', href: '/assistant', icon: Bot, isAi: true },
+          { label: 'Architecture Graph', href: '/graph', icon: Network },
+          { label: 'Personal Coverage', href: '/coverage', icon: PieChart },
+        ],
+        workspaceTitle: 'My Workspace',
+        workspace: [
+          { label: 'My Projects', href: '/projects', icon: FolderGit2 },
+          { label: 'Exit Mode Transfer', href: '/exit-mode', icon: LogOut, isAccent: true },
+        ],
+      };
+    }
+
+    // NEW_EMPLOYEE
+    return {
+      primary: [
+        { label: 'Getting Started', href: '/dashboard', icon: LayoutDashboard },
+        { label: 'Onboarding Guides', href: '/knowledge', icon: BookOpen },
+        { label: 'Ask Nova AI', href: '/assistant', icon: Bot, isAi: true },
+      ],
+      workspaceTitle: 'My Project',
+      workspace: [
+        { label: 'Checkout & Payments', href: '/projects', icon: FolderGit2 },
+        { label: 'Team Directory', href: '/employees', icon: Users },
+      ],
+    };
+  };
+
+  const { primary, workspaceTitle, workspace } = getNavSections();
 
   const handleResetDemo = async () => {
-    if (!confirm('Re-seed the database with original NovaTech enterprise demo dataset?')) return;
+    if (!confirm('Re-seed database with original NovaTech enterprise demo dataset?')) return;
     setResetting(true);
     try {
       const res = await fetch('/api/reset-demo', { method: 'POST' });
@@ -60,6 +157,21 @@ export function Sidebar({ userRole = 'ADMIN', userName = 'Admin User', userAvata
       alert('Failed to reset demo data');
     } finally {
       setResetting(false);
+    }
+  };
+
+  const getRoleBadgeStyle = (r: UserRole) => {
+    switch (r) {
+      case 'ADMIN':
+        return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      case 'MANAGER':
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      case 'EMPLOYEE':
+        return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+      case 'NEW_EMPLOYEE':
+        return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+      default:
+        return 'bg-vault-subtle text-vault-muted border-vault-border';
     }
   };
 
@@ -99,9 +211,11 @@ export function Sidebar({ userRole = 'ADMIN', userName = 'Admin User', userAvata
 
         {/* Primary Navigation */}
         <nav className="p-2 space-y-0.5 mt-2">
-          {primaryNav.map((item) => {
+          {primary.map((item: any) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
             return (
               <Link
@@ -114,7 +228,6 @@ export function Sidebar({ userRole = 'ADMIN', userName = 'Admin User', userAvata
                 }`}
                 title={collapsed ? item.label : undefined}
               >
-                {/* Linear-style left active indicator bar */}
                 {isActive && (
                   <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-full bg-indigo-500" />
                 )}
@@ -129,13 +242,18 @@ export function Sidebar({ userRole = 'ADMIN', userName = 'Admin User', userAvata
                   }`}
                 />
 
-                {!collapsed && (
-                  <span className="flex-1 truncate">{item.label}</span>
+                {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+
+                {!collapsed && item.badge && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    {item.badge}
+                  </span>
                 )}
 
-                {!collapsed && item.hasBadge && (
+                {!collapsed && item.hasDot && (
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                 )}
+
                 {!collapsed && item.isAi && (
                   <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                     AI
@@ -145,20 +263,20 @@ export function Sidebar({ userRole = 'ADMIN', userName = 'Admin User', userAvata
             );
           })}
 
-          {/* Section: Workspace */}
+          {/* Section: Workspace / Governance */}
           <div className="pt-3 pb-1 px-2.5">
             {!collapsed ? (
               <span className="text-[10px] font-mono uppercase tracking-wider text-vault-dim">
-                Workspace
+                {workspaceTitle}
               </span>
             ) : (
               <div className="h-[1px] bg-vault-border/60 my-1" />
             )}
           </div>
 
-          {workspaceNav.map((item) => {
+          {workspace.map((item: any) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href);
+            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
             return (
               <Link
@@ -166,63 +284,44 @@ export function Sidebar({ userRole = 'ADMIN', userName = 'Admin User', userAvata
                 href={item.href}
                 className={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all group ${
                   isActive
-                    ? 'text-vault-text bg-vault-border/60'
+                    ? item.isAccent
+                      ? 'text-amber-300 bg-amber-500/10 border border-amber-500/20'
+                      : 'text-vault-text bg-vault-border/60'
+                    : item.isAccent
+                    ? 'text-vault-muted hover:text-amber-300 hover:bg-vault-subtle/50'
                     : 'text-vault-muted hover:text-vault-text hover:bg-vault-subtle/50'
                 }`}
                 title={collapsed ? item.label : undefined}
               >
                 {isActive && (
-                  <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-full bg-emerald-500" />
+                  <span
+                    className={`absolute left-0 top-1 bottom-1 w-[2px] rounded-full ${
+                      item.isAccent ? 'bg-amber-400' : 'bg-emerald-500'
+                    }`}
+                  />
                 )}
                 <Icon
                   className={`w-4 h-4 shrink-0 transition-colors ${
-                    isActive ? 'text-vault-text' : 'text-vault-dim group-hover:text-vault-text'
+                    isActive
+                      ? item.isAccent
+                        ? 'text-amber-400'
+                        : 'text-vault-text'
+                      : item.isAccent
+                      ? 'text-vault-dim group-hover:text-amber-400'
+                      : 'text-vault-dim group-hover:text-vault-text'
                   }`}
                 />
                 {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                {!collapsed && item.isAccent && role !== 'NEW_EMPLOYEE' && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                )}
               </Link>
             );
           })}
-
-          {/* Section: Exit Mode */}
-          <div className="pt-3 pb-1 px-2.5">
-            {!collapsed ? (
-              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-500/80">
-                Recovery
-              </span>
-            ) : (
-              <div className="h-[1px] bg-vault-border/60 my-1" />
-            )}
-          </div>
-
-          <Link
-            href="/exit-mode"
-            className={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all group ${
-              pathname.startsWith('/exit-mode')
-                ? 'text-amber-300 bg-amber-500/10 border border-amber-500/20'
-                : 'text-vault-muted hover:text-amber-300 hover:bg-vault-subtle/50'
-            }`}
-            title={collapsed ? 'Exit Mode' : undefined}
-          >
-            {pathname.startsWith('/exit-mode') && (
-              <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-full bg-amber-400" />
-            )}
-            <LogOut
-              className={`w-4 h-4 shrink-0 transition-colors ${
-                pathname.startsWith('/exit-mode') ? 'text-amber-400' : 'text-vault-dim group-hover:text-amber-400'
-              }`}
-            />
-            {!collapsed && (
-              <>
-                <span className="flex-1 truncate">Exit Mode</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              </>
-            )}
-          </Link>
         </nav>
       </div>
 
-      {/* Bottom controls: Settings, Reset Demo, User Profile */}
+      {/* Bottom controls: Settings, Reset Demo, User Persona */}
       <div className="p-2 border-t border-vault-border/60 space-y-0.5">
         <Link
           href="/settings"
@@ -237,34 +336,48 @@ export function Sidebar({ userRole = 'ADMIN', userName = 'Admin User', userAvata
           {!collapsed && <span className="flex-1 truncate">Settings</span>}
         </Link>
 
-        <button
-          type="button"
-          onClick={handleResetDemo}
-          disabled={resetting}
-          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-vault-dim hover:text-vault-text hover:bg-vault-subtle/50 transition-colors text-left"
-          title={collapsed ? 'Reset Demo Data' : undefined}
-        >
-          <RotateCcw className={`w-4 h-4 shrink-0 ${resetting ? 'animate-spin' : ''}`} />
-          {!collapsed && <span className="flex-1 truncate">{resetting ? 'Resetting...' : 'Reset Demo'}</span>}
-        </button>
+        {role === 'ADMIN' && (
+          <button
+            type="button"
+            onClick={handleResetDemo}
+            disabled={resetting}
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-vault-dim hover:text-vault-text hover:bg-vault-subtle/50 transition-colors text-left"
+            title={collapsed ? 'Reset Demo Data' : undefined}
+          >
+            <RotateCcw className={`w-4 h-4 shrink-0 ${resetting ? 'animate-spin' : ''}`} />
+            {!collapsed && <span className="flex-1 truncate">{resetting ? 'Resetting...' : 'Reset Demo'}</span>}
+          </button>
+        )}
 
-        {/* User Card */}
+        {/* User Persona & Role Card */}
         <div className="pt-2">
-          <Link
-            href="/login"
-            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-vault-subtle/60 transition-colors"
-            title="Switch demo persona"
+          <div
+            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md bg-vault-dark/40 border border-vault-border/40"
+            title={`${name} (${role})`}
           >
             <div className="w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-[10px] font-semibold text-indigo-300 shrink-0">
-              {userName.slice(0, 2).toUpperCase()}
+              {name.slice(0, 2).toUpperCase()}
             </div>
             {!collapsed && (
               <div className="flex flex-col min-w-0 flex-1 leading-none">
-                <span className="text-xs font-medium text-vault-text truncate">{userName}</span>
-                <span className="text-[10px] font-mono text-vault-dim mt-0.5">{userRole}</span>
+                <span className="text-xs font-medium text-vault-text truncate">{name}</span>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span
+                    className={`text-[9px] font-mono px-1 py-0.2 rounded border uppercase tracking-wider ${getRoleBadgeStyle(
+                      role
+                    )}`}
+                  >
+                    {role.replace('_', ' ')}
+                  </span>
+                  {name.includes('Rahul') && (
+                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      EXIT PENDING
+                    </span>
+                  )}
+                </div>
               </div>
             )}
-          </Link>
+          </div>
         </div>
       </div>
     </aside>

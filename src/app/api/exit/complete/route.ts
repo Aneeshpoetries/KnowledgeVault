@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateCoverageForEmployee } from '@/lib/coverage-engine';
+import { getCurrentUser, logAudit } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { sessionId } = body;
 
@@ -29,6 +35,31 @@ export async function POST(req: NextRequest) {
 
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    if (user.role === 'NEW_EMPLOYEE') {
+      return NextResponse.json(
+        { error: 'Forbidden: New employees cannot finalize exit mode sessions.' },
+        { status: 403 }
+      );
+    }
+
+    if (user.role === 'EMPLOYEE' && session.employeeId !== user.employeeId) {
+      return NextResponse.json(
+        { error: 'Forbidden: Employees cannot finalize other employees exit sessions.' },
+        { status: 403 }
+      );
+    }
+
+    if (
+      user.role === 'MANAGER' &&
+      !user.directReportIds.includes(session.employeeId) &&
+      session.employeeId !== user.employeeId
+    ) {
+      return NextResponse.json(
+        { error: 'Forbidden: Managers can only finalize exit sessions for their team reports.' },
+        { status: 403 }
+      );
     }
 
     const currentCoverage = await calculateCoverageForEmployee(session.employeeId);
@@ -95,6 +126,11 @@ export async function POST(req: NextRequest) {
         'Deprecate mobile v3.1 clients to eliminate the synthetic idempotency fallback script safely.',
       ],
     };
+
+    await logAudit(user, 'COMPLETE_EXIT_MODE', 'EXIT_SESSION', session.id, {
+      employeeName: session.employee.name,
+      itemsRecovered: session.itemsRecovered,
+    });
 
     return NextResponse.json({
       success: true,

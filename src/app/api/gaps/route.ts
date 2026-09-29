@@ -1,21 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateTargetedQuestionsForGap } from '@/lib/ai/gaps';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
     const { searchParams } = new URL(req.url);
     const category = searchParams.get('category');
     const impact = searchParams.get('impact');
     const projectId = searchParams.get('projectId');
 
-    const where: any = { status: 'OPEN' };
-    if (category && category !== 'ALL') where.category = category;
-    if (impact && impact !== 'ALL') where.impact = impact;
-    if (projectId && projectId !== 'ALL') where.projectId = projectId;
+    const filterWhere: any = { status: 'OPEN' };
+    if (category && category !== 'ALL') filterWhere.category = category;
+    if (impact && impact !== 'ALL') filterWhere.impact = impact;
+    if (projectId && projectId !== 'ALL') filterWhere.projectId = projectId;
+
+    let roleScopeWhere: any = {};
+    if (user && user.role !== 'ADMIN') {
+      if (user.role === 'MANAGER') {
+        roleScopeWhere = {
+          OR: [
+            { employeeId: { in: [...user.directReportIds, user.employeeId || ''] } },
+            { projectId: { in: user.projectIds } },
+            { project: { department: user.department || 'Core Engineering' } },
+          ],
+        };
+      } else {
+        // EMPLOYEE or NEW_EMPLOYEE
+        roleScopeWhere = {
+          OR: [
+            { employeeId: user.employeeId || 'none' },
+            { projectId: { in: user.projectIds.length > 0 ? user.projectIds : ['none'] } },
+          ],
+        };
+      }
+    }
 
     const gaps = await prisma.knowledgeGap.findMany({
-      where,
+      where: {
+        AND: [filterWhere, roleScopeWhere],
+      },
       include: {
         project: true,
         employee: true,

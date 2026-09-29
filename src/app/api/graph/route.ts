@@ -1,29 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
+import { buildAccessibleKnowledgeWhere } from '@/lib/rbac';
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    const accessibleKnowledgeWhere = user
+      ? buildAccessibleKnowledgeWhere(user)
+      : { status: 'APPROVED', visibility: 'PUBLIC' };
+
     const { searchParams } = new URL(req.url);
     const filterType = searchParams.get('type');
     const search = searchParams.get('search');
 
-    // Fetch all stored relationships
-    const relationships = await prisma.knowledgeRelationship.findMany({
-      orderBy: { weight: 'desc' },
-      take: 100,
-    });
+    // Scope employees query by user role
+    let employeeWhere: any = {};
+    if (user && user.role !== 'ADMIN') {
+      if (user.role === 'MANAGER') {
+        employeeWhere = {
+          OR: [
+            { id: user.employeeId || '' },
+            { managerId: user.employeeId || '' },
+            { id: { in: user.directReportIds } },
+          ],
+        };
+      } else {
+        // EMPLOYEE or NEW_EMPLOYEE
+        employeeWhere = {
+          OR: [
+            { id: user.employeeId || '' },
+            { id: user.managerId || '' },
+          ],
+        };
+      }
+    }
 
-    // Also fetch core entities to build rich nodes
+    // Scope projects query by user role
+    let projectWhere: any = {};
+    if (user && user.role !== 'ADMIN') {
+      if (user.role === 'MANAGER') {
+        projectWhere = {
+          OR: [
+            { id: { in: user.projectIds } },
+            { department: user.department || 'Core Engineering' },
+          ],
+        };
+      } else {
+        projectWhere = {
+          id: { in: user.projectIds.length > 0 ? user.projectIds : ['none'] },
+        };
+      }
+    }
+
+    // Fetch scoped entities to build rich nodes
     const [employees, projects, technologies, knowledgeItems, sources] = await Promise.all([
-      prisma.employee.findMany(),
-      prisma.project.findMany(),
+      prisma.employee.findMany({ where: employeeWhere }),
+      prisma.project.findMany({ where: projectWhere }),
       prisma.technology.findMany(),
       prisma.knowledgeItem.findMany({
-        where: { status: 'APPROVED' },
-        take: 30,
+        where: accessibleKnowledgeWhere,
+        take: 40,
       }),
       prisma.knowledgeSource.findMany({ take: 15 }),
     ]);
+
+    const scopedEmployeeIds = new Set(employees.map((e) => e.id));
+    const scopedProjectIds = new Set(projects.map((p) => p.id));
+    const scopedKnowledgeIds = new Set(knowledgeItems.map((k) => k.id));
+
+    // Fetch relationships connected to scoped entities
+    const relationships = await prisma.knowledgeRelationship.findMany({
+      where:
+        user?.role === 'ADMIN'
+          ? {}
+          : {
+              OR: [
+                { sourceEntityId: { in: [...scopedEmployeeIds, ...scopedProjectIds, ...scopedKnowledgeIds] } },
+                { targetEntityId: { in: [...scopedEmployeeIds, ...scopedProjectIds, ...scopedKnowledgeIds] } },
+              ],
+            },
+      orderBy: { weight: 'desc' },
+      take: 100,
+    });
 
     const nodeMap = new Map<string, any>();
 

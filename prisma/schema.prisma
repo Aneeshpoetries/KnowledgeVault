@@ -37,11 +37,17 @@ model Employee {
   atRiskKnowledgeCount   Int                  @default(0)
   concentrationRatio     Float                @default(0.0)
   isExitModeActive       Boolean              @default(false)
+  lifecycleStatus        String               @default("ACTIVE") // ACTIVE, EXIT_PENDING, OFFBOARDED
+  managerId              String?
+  manager                Employee?            @relation("EmployeeHierarchy", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports          Employee[]           @relation("EmployeeHierarchy")
   joinedDate             DateTime?
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt
   user                   User?
   knowledgeItems         KnowledgeItem[]
+  createdKnowledgeItems  KnowledgeItem[]      @relation("KnowledgeCreator")
+  reviewedKnowledgeItems KnowledgeItem[]      @relation("KnowledgeReviewer")
   projects               EmployeeProject[]
   technologies           EmployeeTechnology[]
   exitSessions           ExitSession[]
@@ -149,47 +155,70 @@ model KnowledgeChunk {
 }
 
 model KnowledgeItem {
-  id                 String               @id @default(cuid())
-  title              String
-  summary            String
-  content            String
-  originalSourceText String
-  aiInterpretation   String
-  whyItMatters       String
-  type               String // OPERATIONAL_TIP, DECISION, PROCESS, TROUBLESHOOTING, BUSINESS_RULE, ARCHITECTURE, EDGE_CASE, KNOWN_BUG, SOLUTION, WARNING, BEST_PRACTICE, DEPENDENCY
-  risk               String               @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
-  importance         Int                  @default(7) // 1-10
-  confidence         Float                @default(0.85) // 0-1
-  status             String               @default("APPROVED") // PENDING_APPROVAL, APPROVED, REJECTED, ARCHIVED
-  freshness          String               @default("FRESH") // FRESH, AGING, STALE, UNVERIFIED
-  lastVerifiedAt     DateTime?
-  verifiedBy         String?
-  projectId          String?
-  employeeId         String?
-  sourceId           String?
-  tagsJson           String? // JSON string array
-  reasoning          String?
-  problemsJson       String? // JSON string array
-  solutionsJson      String? // JSON string array
-  dependenciesJson   String? // JSON string array
+  id                  String               @id @default(cuid())
+  title               String
+  summary             String
+  content             String
+  originalSourceText  String
+  aiInterpretation    String
+  whyItMatters        String
+  type                String // OPERATIONAL_TIP, DECISION, PROCESS, TROUBLESHOOTING, BUSINESS_RULE, ARCHITECTURE, EDGE_CASE, KNOWN_BUG, SOLUTION, WARNING, BEST_PRACTICE, DEPENDENCY
+  risk                String               @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  importance          Int                  @default(7) // 1-10
+  confidence          Float                @default(0.85) // 0-1
+  status              String               @default("APPROVED") // DRAFT, PENDING_REVIEW, APPROVED, VERIFIED, REJECTED, NEEDS_REVISION, STALE, ARCHIVED
+  visibility          String               @default("PUBLIC") // PUBLIC, TEAM, PROJECT, PRIVATE, RESTRICTED
+  freshness           String               @default("FRESH") // FRESH, AGING, STALE, UNVERIFIED
+  lastVerifiedAt      DateTime?
+  verifiedBy          String?
+  projectId           String?
+  employeeId          String?
+  sourceId            String?
+  createdByEmployeeId String?
+  reviewedByEmployeeId String?
+  reviewedAt          DateTime?
+  reviewNotes         String?
+  version             Int                  @default(1)
+  tagsJson            String? // JSON string array
+  reasoning           String?
+  problemsJson        String? // JSON string array
+  solutionsJson       String? // JSON string array
+  dependenciesJson    String? // JSON string array
   relatedEntitiesJson String? // JSON string array
-  hasConflict        Boolean              @default(false)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  project            Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  employee           Employee?            @relation(fields: [employeeId], references: [id], onDelete: SetNull)
-  source             KnowledgeSource?     @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  embeddings         KnowledgeEmbedding[]
-  verifications      Verification[]
-  conflictA          KnowledgeConflict[]  @relation("ConflictItemA")
-  conflictB          KnowledgeConflict[]  @relation("ConflictItemB")
+  hasConflict         Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  project             Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  employee            Employee?            @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  createdByEmployee   Employee?            @relation("KnowledgeCreator", fields: [createdByEmployeeId], references: [id], onDelete: SetNull)
+  reviewedByEmployee  Employee?            @relation("KnowledgeReviewer", fields: [reviewedByEmployeeId], references: [id], onDelete: SetNull)
+  source              KnowledgeSource?     @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  embeddings          KnowledgeEmbedding[]
+  verifications       Verification[]
+  conflictA           KnowledgeConflict[]  @relation("ConflictItemA")
+  conflictB           KnowledgeConflict[]  @relation("ConflictItemB")
+  reviews             KnowledgeReview[]
 
   @@index([projectId])
   @@index([employeeId])
   @@index([type])
   @@index([risk])
   @@index([status])
+  @@index([visibility])
   @@index([createdAt])
+}
+
+model KnowledgeReview {
+  id              String        @id @default(cuid())
+  knowledgeItemId String
+  reviewerName    String
+  reviewerRole    String?
+  action          String // APPROVE, REQUEST_CHANGES, REJECT
+  reason          String?
+  createdAt       DateTime      @default(now())
+  knowledgeItem   KnowledgeItem @relation(fields: [knowledgeItemId], references: [id], onDelete: Cascade)
+
+  @@index([knowledgeItemId])
 }
 
 model KnowledgeEmbedding {
@@ -352,7 +381,7 @@ model Verification {
 
 model Activity {
   id           String    @id @default(cuid())
-  type         String // EXTRACTION, VERIFICATION, GAP_DETECTED, COVERAGE_INCREASE, SOURCE_PROCESSED, CONFLICT_DETECTED, RISK_ALERT, EXIT_SESSION
+  type         String // EXTRACTION, VERIFICATION, GAP_DETECTED, COVERAGE_INCREASE, SOURCE_PROCESSED, CONFLICT_DETECTED, RISK_ALERT, EXIT_SESSION, KNOWLEDGE_SUBMITTED, KNOWLEDGE_APPROVED, KNOWLEDGE_REJECTED
   title        String
   description  String
   metadataJson String?
@@ -369,16 +398,37 @@ model Activity {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  type      String // CRITICAL_GAP, STALE_KNOWLEDGE, CONFLICT, LOW_COVERAGE, HIGH_RISK_CONCENTRATION, NEW_AI_QUESTION, DOCUMENT_PROCESSED
-  title     String
-  message   String
-  link      String?
-  read      Boolean  @default(false)
-  severity  String   @default("INFO") // INFO, WARNING, CRITICAL, SUCCESS
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  userId     String?
+  employeeId String?
+  type       String // REVIEW_REQUEST, KNOWLEDGE_APPROVED, KNOWLEDGE_REJECTED, CHANGES_REQUESTED, CRITICAL_GAP, STALE_KNOWLEDGE, CONFLICT, LOW_COVERAGE, HIGH_RISK_CONCENTRATION, NEW_AI_QUESTION, DOCUMENT_PROCESSED
+  title      String
+  message    String
+  link       String?
+  read       Boolean   @default(false)
+  severity   String    @default("INFO") // INFO, WARNING, CRITICAL, SUCCESS
+  createdAt  DateTime  @default(now())
 
+  @@index([userId])
+  @@index([employeeId])
   @@index([read])
   @@index([severity])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id           String    @id @default(cuid())
+  userId       String?
+  userName     String
+  userRole     String
+  action       String // LOGIN, LOGOUT, KNOWLEDGE_CREATE, KNOWLEDGE_SUBMIT, KNOWLEDGE_APPROVE, KNOWLEDGE_REJECT, KNOWLEDGE_VERIFY, KNOWLEDGE_DELETE, PERMISSION_CHANGE, ROLE_CHANGE, SOURCE_UPLOAD, AI_QUERY_METADATA, EXIT_MODE_START
+  resourceType String? // KNOWLEDGE, EMPLOYEE, PROJECT, SOURCE, SYSTEM
+  resourceId   String?
+  detailsJson  String? // Safe metadata only, no sensitive prompt content
+  ipAddress    String?
+  createdAt    DateTime  @default(now())
+
+  @@index([userRole])
+  @@index([action])
   @@index([createdAt])
 }

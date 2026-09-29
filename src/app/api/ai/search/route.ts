@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateEmbedding, cosineSimilarity } from '@/lib/ai/embeddings';
+import { getCurrentUser } from '@/lib/auth';
+import { buildAccessibleKnowledgeWhere } from '@/lib/rbac';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,8 +17,16 @@ export async function POST(req: NextRequest) {
     const queryEmbedding = await generateEmbedding(trimmedQuery);
     const queryWords = trimmedQuery.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
 
-    // 1. Vector Search over Knowledge Embeddings
+    const user = await getCurrentUser();
+    const accessibleWhere = user
+      ? buildAccessibleKnowledgeWhere(user)
+      : { status: 'APPROVED', visibility: 'PUBLIC' };
+
+    // 1. Vector Search over Permitted Knowledge Embeddings
     const embeddings = await prisma.knowledgeEmbedding.findMany({
+      where: {
+        knowledgeItem: accessibleWhere,
+      },
       include: {
         knowledgeItem: {
           include: {

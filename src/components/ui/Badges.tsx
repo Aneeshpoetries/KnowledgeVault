@@ -103,6 +103,8 @@ export function KnowledgeTypeBadge({ type }: { type: KnowledgeType | string }) {
   );
 }
 
+export { KnowledgeTypeBadge as TypeBadge };
+
 export function FreshnessBadge({
   freshness,
   lastVerifiedAt,

@@ -5,6 +5,7 @@ import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { MobileNav } from './MobileNav';
 import { CommandPalette } from '../ui/CommandPalette';
+import { useAuth } from '@/context/AuthContext';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -15,25 +16,30 @@ interface AppShellProps {
   };
 }
 
-export function AppShell({ children, user }: AppShellProps) {
+export function AppShell({ children, user: propUser }: AppShellProps) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const { user: authUser } = useAuth();
+
+  const activeName = propUser?.name || authUser?.name || 'Admin User';
+  const activeRole = propUser?.role || authUser?.role || 'ADMIN';
+  const activeAvatar = propUser?.avatar || authUser?.avatar;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-vault-dark text-vault-text antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
       {/* Persistent Desktop Sidebar */}
       <Sidebar
-        userName={user?.name || 'Admin User'}
-        userRole={user?.role || 'ADMIN'}
-        userAvatar={user?.avatar}
+        userName={activeName}
+        userRole={activeRole}
+        userAvatar={activeAvatar}
       />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <TopBar
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-          userName={user?.name || 'Admin User'}
-          userRole={user?.role || 'ADMIN'}
-          userAvatar={user?.avatar}
+          userName={activeName}
+          userRole={activeRole}
+          userAvatar={activeAvatar}
         />
 
         {/* Scrollable Page Body */}

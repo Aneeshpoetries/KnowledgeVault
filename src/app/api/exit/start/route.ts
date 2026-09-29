@@ -1,14 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateCoverageForEmployee } from '@/lib/coverage-engine';
+import { getCurrentUser, logAudit } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { employeeId } = body;
 
     if (!employeeId) {
       return NextResponse.json({ error: 'employeeId is required' }, { status: 400 });
+    }
+
+    if (user.role === 'NEW_EMPLOYEE') {
+      return NextResponse.json(
+        { error: 'Forbidden: New employees cannot initiate knowledge exit modes.' },
+        { status: 403 }
+      );
+    }
+
+    if (user.role === 'EMPLOYEE' && employeeId !== user.employeeId) {
+      return NextResponse.json(
+        { error: 'Forbidden: Employees can only initiate Exit Mode for their own profile.' },
+        { status: 403 }
+      );
+    }
+
+    if (
+      user.role === 'MANAGER' &&
+      !user.directReportIds.includes(employeeId) &&
+      employeeId !== user.employeeId
+    ) {
+      return NextResponse.json(
+        { error: 'Forbidden: Managers can only initiate Exit Mode for direct reports.' },
+        { status: 403 }
+      );
     }
 
     const employee = await prisma.employee.findUnique({
@@ -105,6 +136,11 @@ export async function POST(req: NextRequest) {
     await prisma.employee.update({
       where: { id: employeeId },
       data: { isExitModeActive: true },
+    });
+
+    await logAudit(user, 'START_EXIT_MODE', 'EXIT_SESSION', session?.id, {
+      employeeId,
+      employeeName: employee.name,
     });
 
     return NextResponse.json({ success: true, session });

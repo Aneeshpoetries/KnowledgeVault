@@ -1,5 +1,11 @@
 const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
 const prisma = new PrismaClient();
+
+function hashPassword(password) {
+  const salt = 'kv_salt_2026';
+  return crypto.scryptSync(password, salt, 32).toString('hex');
+}
 
 function generateDeterministicEmbedding(text, dim = 64) {
   const vec = new Array(dim).fill(0);
@@ -28,9 +34,11 @@ function generateDeterministicEmbedding(text, dim = 64) {
 }
 
 async function main() {
-  console.log('Seeding KnowledgeVault AI database with enterprise NovaTech data...');
+  console.log('Seeding KnowledgeVault AI enterprise database with RBAC profiles...');
 
   // Clean existing data
+  await prisma.auditLog.deleteMany();
+  await prisma.knowledgeReview.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.activity.deleteMany();
   await prisma.verification.deleteMany();
@@ -53,31 +61,95 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.employee.deleteMany();
 
-  // 1. Employees
-  const rahul = await prisma.employee.create({
+  const defaultPasswordHash = hashPassword('demo123');
+
+  // 1. Employees (with Hierarchy: Marcus -> Sarah -> Rahul, Alex)
+  const marcusEmp = await prisma.employee.create({
+    data: {
+      name: 'Marcus Vance',
+      role: 'Engineering Director',
+      department: 'Engineering Leadership',
+      email: 'marcus@novatech.demo',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      bio: 'Engineering Director leading platform continuity, enterprise reliability, and architectural governance.',
+      riskLevel: 'LOW',
+      knowledgeCoverage: 92.0,
+      criticalKnowledgeCount: 1,
+      atRiskKnowledgeCount: 2,
+      concentrationRatio: 15.0,
+      lifecycleStatus: 'ACTIVE',
+      isExitModeActive: false,
+      joinedDate: new Date('2020-01-15'),
+    },
+  });
+
+  const sarahEmp = await prisma.employee.create({
+    data: {
+      name: 'Sarah Lin',
+      role: 'Engineering Manager',
+      department: 'Core Infrastructure & Payments',
+      email: 'sarah@novatech.demo',
+      managerId: marcusEmp.id,
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+      bio: 'Engineering Manager leading Core Infrastructure, payments processing, and database reliability teams.',
+      riskLevel: 'LOW',
+      knowledgeCoverage: 84.0,
+      criticalKnowledgeCount: 2,
+      atRiskKnowledgeCount: 4,
+      concentrationRatio: 22.0,
+      lifecycleStatus: 'ACTIVE',
+      isExitModeActive: false,
+      joinedDate: new Date('2021-04-10'),
+    },
+  });
+
+  const rahulEmp = await prisma.employee.create({
     data: {
       name: 'Rahul Sharma',
-      role: 'Senior Backend Developer',
+      role: 'Staff Infrastructure Engineer',
       department: 'Core Infrastructure & Payments',
-      email: 'rahul.sharma@novatech.internal',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      bio: 'Lead architect of NovaTech payment engine for 4 years. Single point of contact for legacy settlement workflows.',
+      email: 'rahul@novatech.demo',
+      managerId: sarahEmp.id,
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      bio: 'Lead architect of NovaTech payment engine for 4 years. Single point of contact for legacy settlement workflows. Departing in 2 weeks.',
       riskLevel: 'CRITICAL',
       knowledgeCoverage: 54.0,
       criticalKnowledgeCount: 8,
       atRiskKnowledgeCount: 14,
       concentrationRatio: 73.0,
+      lifecycleStatus: 'EXIT_PENDING',
       isExitModeActive: true,
       joinedDate: new Date('2022-03-15'),
     },
   });
 
-  const priya = await prisma.employee.create({
+  const alexEmp = await prisma.employee.create({
+    data: {
+      name: 'Alex Chen',
+      role: 'Junior Developer',
+      department: 'Core Infrastructure & Payments',
+      email: 'alex@novatech.demo',
+      managerId: sarahEmp.id,
+      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150',
+      bio: 'Junior Developer ramping up on NovaTech services, reviewing runbooks, and exploring core payment architecture.',
+      riskLevel: 'LOW',
+      knowledgeCoverage: 28.0,
+      criticalKnowledgeCount: 0,
+      atRiskKnowledgeCount: 1,
+      concentrationRatio: 5.0,
+      lifecycleStatus: 'ACTIVE',
+      isExitModeActive: false,
+      joinedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // Joined 3 days ago
+    },
+  });
+
+  const priyaEmp = await prisma.employee.create({
     data: {
       name: 'Priya Mehta',
       role: 'Staff Frontend Engineer',
       department: 'Design Systems & Portal',
-      email: 'priya.mehta@novatech.internal',
+      email: 'priya.mehta@novatech.demo',
+      managerId: marcusEmp.id,
       avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150',
       bio: 'Creator of NovaTech Unified UI kit, SSR hydration optimization lead.',
       riskLevel: 'MEDIUM',
@@ -85,83 +157,76 @@ async function main() {
       criticalKnowledgeCount: 3,
       atRiskKnowledgeCount: 5,
       concentrationRatio: 42.0,
+      lifecycleStatus: 'ACTIVE',
       joinedDate: new Date('2022-08-01'),
     },
   });
 
-  const arjun = await prisma.employee.create({
+  const arjunEmp = await prisma.employee.create({
     data: {
       name: 'Arjun Verma',
       role: 'Principal DevOps & SRE Engineer',
       department: 'Cloud Platform & Reliability',
-      email: 'arjun.verma@novatech.internal',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      email: 'arjun.verma@novatech.demo',
+      managerId: marcusEmp.id,
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
       bio: 'Maintains AWS multi-region Kubernetes clusters, Kafka pipeline, and zero-trust IAM networks.',
       riskLevel: 'HIGH',
       knowledgeCoverage: 68.0,
       criticalKnowledgeCount: 6,
       atRiskKnowledgeCount: 11,
       concentrationRatio: 65.0,
+      lifecycleStatus: 'ACTIVE',
       joinedDate: new Date('2021-11-10'),
     },
   });
 
-  const elena = await prisma.employee.create({
-    data: {
-      name: 'Elena Rostova',
-      role: 'Director of Architecture',
-      department: 'Enterprise Architecture',
-      email: 'elena.rostova@novatech.internal',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-      bio: 'Oversight across technical roadmaps, service decomposition, and compliance certifications.',
-      riskLevel: 'LOW',
-      knowledgeCoverage: 86.0,
-      criticalKnowledgeCount: 2,
-      atRiskKnowledgeCount: 3,
-      concentrationRatio: 25.0,
-      joinedDate: new Date('2020-04-12'),
-    },
-  });
-
-  // 2. Demo Users for authentication
+  // 2. Demo Users (Authentication accounts with passwordHash)
   await prisma.user.create({
     data: {
-      name: 'Admin User',
-      email: 'admin@novatech.ai',
+      name: 'Marcus Vance',
+      email: 'marcus@novatech.demo',
+      passwordHash: defaultPasswordHash,
       role: 'ADMIN',
-      title: 'VP of Engineering',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+      title: 'Engineering Director',
+      avatar: marcusEmp.avatar,
+      employeeId: marcusEmp.id,
     },
   });
 
   await prisma.user.create({
     data: {
-      name: 'Sarah Chen (Manager)',
-      email: 'manager@novatech.ai',
+      name: 'Sarah Lin',
+      email: 'sarah@novatech.demo',
+      passwordHash: defaultPasswordHash,
       role: 'MANAGER',
-      title: 'Engineering Manager - Payments',
-      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+      title: 'Engineering Manager',
+      avatar: sarahEmp.avatar,
+      employeeId: sarahEmp.id,
     },
   });
 
   await prisma.user.create({
     data: {
       name: 'Rahul Sharma',
-      email: 'rahul@novatech.ai',
+      email: 'rahul@novatech.demo',
+      passwordHash: defaultPasswordHash,
       role: 'EMPLOYEE',
-      title: 'Senior Backend Developer',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      employeeId: rahul.id,
+      title: 'Staff Infrastructure Engineer',
+      avatar: rahulEmp.avatar,
+      employeeId: rahulEmp.id,
     },
   });
 
   await prisma.user.create({
     data: {
-      name: 'Alex Rivera',
-      email: 'newhire@novatech.ai',
+      name: 'Alex Chen',
+      email: 'alex@novatech.demo',
+      passwordHash: defaultPasswordHash,
       role: 'NEW_EMPLOYEE',
-      title: 'Associate Software Engineer',
-      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150',
+      title: 'Junior Developer',
+      avatar: alexEmp.avatar,
+      employeeId: alexEmp.id,
     },
   });
 
@@ -171,7 +236,7 @@ async function main() {
       name: 'Payment System',
       slug: 'payment-system',
       description: 'Core transactional backbone handling card charges, ACH transfers, idempotency tokens, and ledger settlements.',
-      department: 'Core Engineering',
+      department: 'Core Infrastructure & Payments',
       status: 'ACTIVE',
       riskLevel: 'CRITICAL',
       coverageScore: 54.0,
@@ -188,7 +253,7 @@ async function main() {
       name: 'Customer Portal',
       slug: 'customer-portal',
       description: 'Next.js 15 client dashboard providing invoice downloads, card management, and subscription telemetry.',
-      department: 'Frontend Engineering',
+      department: 'Design Systems & Portal',
       status: 'ACTIVE',
       riskLevel: 'LOW',
       coverageScore: 78.0,
@@ -205,7 +270,7 @@ async function main() {
       name: 'Analytics Platform',
       slug: 'analytics-platform',
       description: 'High-throughput Kafka streaming pipeline feeding ClickHouse and aggregate data marts.',
-      department: 'Data Platform',
+      department: 'Core Infrastructure & Payments',
       status: 'ACTIVE',
       riskLevel: 'MEDIUM',
       coverageScore: 64.0,
@@ -220,13 +285,16 @@ async function main() {
   // Project-Employee mappings
   await prisma.employeeProject.createMany({
     data: [
-      { employeeId: rahul.id, projectId: paymentProject.id, role: 'Lead Architect' },
-      { employeeId: arjun.id, projectId: paymentProject.id, role: 'Infrastructure Lead' },
-      { employeeId: priya.id, projectId: portalProject.id, role: 'Frontend Lead' },
-      { employeeId: rahul.id, projectId: analyticsProject.id, role: 'Integration Specialist' },
-      { employeeId: elena.id, projectId: paymentProject.id, role: 'Architecture Reviewer' },
-      { employeeId: elena.id, projectId: portalProject.id, role: 'Architecture Reviewer' },
-      { employeeId: elena.id, projectId: analyticsProject.id, role: 'Architecture Reviewer' },
+      { employeeId: marcusEmp.id, projectId: paymentProject.id, role: 'Executive Sponsor' },
+      { employeeId: marcusEmp.id, projectId: portalProject.id, role: 'Executive Sponsor' },
+      { employeeId: marcusEmp.id, projectId: analyticsProject.id, role: 'Executive Sponsor' },
+      { employeeId: sarahEmp.id, projectId: paymentProject.id, role: 'Engineering Manager' },
+      { employeeId: sarahEmp.id, projectId: analyticsProject.id, role: 'Engineering Manager' },
+      { employeeId: rahulEmp.id, projectId: paymentProject.id, role: 'Lead Architect' },
+      { employeeId: rahulEmp.id, projectId: analyticsProject.id, role: 'Integration Specialist' },
+      { employeeId: alexEmp.id, projectId: paymentProject.id, role: 'Onboarding Contributor' },
+      { employeeId: arjunEmp.id, projectId: paymentProject.id, role: 'Infrastructure Lead' },
+      { employeeId: priyaEmp.id, projectId: portalProject.id, role: 'Frontend Lead' },
     ],
   });
 
@@ -257,19 +325,22 @@ async function main() {
 
   await prisma.employeeTechnology.createMany({
     data: [
-      { employeeId: rahul.id, technologyId: java.id, proficiency: 'EXPERT' },
-      { employeeId: rahul.id, technologyId: spring.id, proficiency: 'EXPERT' },
-      { employeeId: rahul.id, technologyId: redis.id, proficiency: 'EXPERT' },
-      { employeeId: rahul.id, technologyId: postgres.id, proficiency: 'EXPERT' },
-      { employeeId: priya.id, technologyId: react.id, proficiency: 'EXPERT' },
-      { employeeId: priya.id, technologyId: nextjs.id, proficiency: 'EXPERT' },
-      { employeeId: arjun.id, technologyId: docker.id, proficiency: 'EXPERT' },
-      { employeeId: arjun.id, technologyId: aws.id, proficiency: 'EXPERT' },
-      { employeeId: arjun.id, technologyId: kafka.id, proficiency: 'INTERMEDIATE' },
+      { employeeId: rahulEmp.id, technologyId: java.id, proficiency: 'EXPERT' },
+      { employeeId: rahulEmp.id, technologyId: spring.id, proficiency: 'EXPERT' },
+      { employeeId: rahulEmp.id, technologyId: redis.id, proficiency: 'EXPERT' },
+      { employeeId: rahulEmp.id, technologyId: postgres.id, proficiency: 'EXPERT' },
+      { employeeId: sarahEmp.id, technologyId: java.id, proficiency: 'EXPERT' },
+      { employeeId: sarahEmp.id, technologyId: postgres.id, proficiency: 'EXPERT' },
+      { employeeId: alexEmp.id, technologyId: java.id, proficiency: 'INTERMEDIATE' },
+      { employeeId: alexEmp.id, technologyId: spring.id, proficiency: 'NOVICE' },
+      { employeeId: priyaEmp.id, technologyId: react.id, proficiency: 'EXPERT' },
+      { employeeId: priyaEmp.id, technologyId: nextjs.id, proficiency: 'EXPERT' },
+      { employeeId: arjunEmp.id, technologyId: docker.id, proficiency: 'EXPERT' },
+      { employeeId: arjunEmp.id, technologyId: aws.id, proficiency: 'EXPERT' },
     ],
   });
 
-  // 5. Knowledge Sources
+  // 5. Sources
   const sourceMeeting = await prisma.knowledgeSource.create({
     data: {
       title: 'Payment Deployment Incident Review – March 12',
@@ -277,7 +348,7 @@ async function main() {
       fileName: 'payment-incident-march12-transcript.txt',
       fileSize: 14200,
       mimeType: 'text/plain',
-      rawText: 'Discussion regarding the catastrophic outage during the Q1 payment gateway rollout. Rahul Sharma noted that the API gateway timeout was set to 5000ms while Chase Paymentech 3DS v2 takes up to 8500ms on peak traffic. Also discussed: Never restart payment service during billing hours.',
+      rawText: 'Discussion regarding the outage during the payment gateway rollout. API gateway timeout was set to 5000ms while Chase 3DS takes up to 8500ms.',
       status: 'PROCESSED',
       confidence: 0.94,
       extractedCount: 5,
@@ -293,7 +364,7 @@ async function main() {
       fileName: 'payment-service-deployment-guide.md',
       fileSize: 38400,
       mimeType: 'text/markdown',
-      rawText: '# Payment Service Runbook\nDeployment requires verifying Redis cluster replica lag and setting PgBouncer pool max connections to 80. Ensure zero-downtime rolling restart with 30s readiness probe grace period.',
+      rawText: '# Payment Service Runbook\nDeployment requires verifying Redis cluster replica lag and setting PgBouncer pool max connections to 80.',
       status: 'PROCESSED',
       confidence: 0.91,
       extractedCount: 8,
@@ -302,46 +373,33 @@ async function main() {
     },
   });
 
-  const sourceSlack = await prisma.knowledgeSource.create({
-    data: {
-      title: 'Core Infrastructure SRE Slack #incident-room Export',
-      type: 'SLACK',
-      fileName: 'slack-incident-room-export.json',
-      fileSize: 52100,
-      mimeType: 'application/json',
-      rawText: 'Thread: PgBouncer connection exhaustion during midnight settlement cron. Rahul: "The worker batch size defaults to 50 in application.yml, but the settlement engine spawns 4 parallel sub-jobs, saturating all 120 sockets."',
-      status: 'PROCESSED',
-      confidence: 0.93,
-      extractedCount: 6,
-      highRiskCount: 2,
-      processedAt: new Date(),
-    },
-  });
-
-  // 6. Knowledge Items
+  // 6. Knowledge Items with Visibility and Statuses
   const item1 = await prisma.knowledgeItem.create({
     data: {
       title: 'Payment API Timeout in Peak Billing Windows',
       summary: 'Before modifying payment API or deploying new revisions, verify and increase API gateway timeout to at least 10,000ms to avoid silent 504 Gateway Timeouts under Chase 3DS traffic.',
       content: 'During peak billing hours (10:00 - 14:00 EST on month-end), third-party payment partner gateways experience 3D-Secure 2.0 biometric challenge delays that exceed 7,500ms. If the internal Envoy/Kong proxy timeout is left at default 5,000ms, client connections are severed while backend card auth actually succeeds, resulting in phantom double-charges. Always verify Redis queue depth is below 500 before triggering rolling redeploys.',
       originalSourceText: 'Whenever we update the payment API, check the timeout setting because it caused serious problems last time. Chase Paymentech 3DS v2 takes up to 8500ms during peak volume, while default gateway cut off at 5000ms.',
-      aiInterpretation: 'The payment service is acutely susceptible to downstream latency variance in third-party card processing. A gateway timeout lower than 10 seconds results in state inconsistency between payment intent and transaction capture.',
-      whyItMatters: 'Direct financial liability and chargeback risk. Severed connections cause users to click Retry, triggering duplicate charges if idempotency validation fails.',
+      aiInterpretation: 'The payment service is acutely susceptible to downstream latency variance in third-party card processing.',
+      whyItMatters: 'Direct financial liability and chargeback risk.',
       type: 'OPERATIONAL_TIP',
       risk: 'HIGH',
       importance: 9,
       confidence: 0.91,
       status: 'APPROVED',
+      visibility: 'PROJECT',
       freshness: 'FRESH',
-      lastVerifiedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+      lastVerifiedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
       verifiedBy: 'Rahul Sharma',
       projectId: paymentProject.id,
-      employeeId: rahul.id,
+      employeeId: rahulEmp.id,
+      createdByEmployeeId: rahulEmp.id,
+      reviewedByEmployeeId: sarahEmp.id,
+      reviewedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       sourceId: sourceMeeting.id,
       tagsJson: JSON.stringify(['payment', 'timeout', 'gateway', 'envoy', 'chase-paymentech', '3ds']),
-      reasoning: 'Extracted with high confidence from incident post-mortem transcript. Matches real architectural behavior of Spring Boot gateway client.',
-      problemsJson: JSON.stringify(['504 Gateway Timeout during peak billing windows', 'Phantom charges due to severed downstream responses']),
-      solutionsJson: JSON.stringify(['Increase API gateway timeout to 10,000ms', 'Verify Redis queue depth before deployment']),
+      problemsJson: JSON.stringify(['504 Gateway Timeout during peak billing windows', 'Phantom charges']),
+      solutionsJson: JSON.stringify(['Increase API gateway timeout to 10,000ms']),
       dependenciesJson: JSON.stringify(['Envoy API Gateway', 'Chase Paymentech 3DS v2', 'Redis session cluster']),
       relatedEntitiesJson: JSON.stringify(['Payment System', 'Rahul Sharma', 'Java', 'Spring Boot']),
     },
@@ -350,165 +408,240 @@ async function main() {
   const item2 = await prisma.knowledgeItem.create({
     data: {
       title: 'Strict Billing-Hour Execution Restriction',
-      summary: 'Never restart or perform schema migrations on payment-service during active billing hours (09:00 - 18:00 EST).',
-      content: 'In-flight idempotent transaction tokens are synchronized through a dual Redis/PostgreSQL write-through cache. A hard restart during billing hours invalidates memory buffers and causes transaction queue drops in SQS FIFO, causing duplicate charge retries.',
-      originalSourceText: 'Do not restart payment-service during billing hours. We lost 14 transactions last month when someone bounced the pod during 11am peak billing.',
-      aiInterpretation: 'Rolling restarts must be strictly restricted to the scheduled maintenance window (21:00 - 23:00 UTC) with SQS worker pause engaged first.',
-      whyItMatters: 'Avoids revenue drop and unrecoverable silent ledger discrepancy.',
+      summary: 'Never trigger payment service restart or execute settlement batch scripts between 09:00 - 18:00 EST. High-volume card authorization drops inflight requests during pod termination.',
+      content: 'The payment service maintains active HTTP connections with bank processors for authorization holds. While Kubernetes sends SIGTERM, the third-party client library does not gracefully flush socket pools. Any deployment during peak hours (09:00 - 18:00 EST) results in dropped customer checkouts with uncommitted ledger states. Schedule rolling upgrades strictly between 02:00 - 05:00 EST.',
+      originalSourceText: 'Do not restart billing during business hours under any circumstances. We dropped 40 transactions last November.',
+      aiInterpretation: 'The service lacks connection-draining support for long-lived partner sockets.',
+      whyItMatters: 'Violates SLA agreements and triggers merchant penalties.',
       type: 'BUSINESS_RULE',
       risk: 'CRITICAL',
       importance: 10,
-      confidence: 0.95,
+      confidence: 0.96,
       status: 'APPROVED',
+      visibility: 'PROJECT',
       freshness: 'FRESH',
       lastVerifiedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       verifiedBy: 'Rahul Sharma',
       projectId: paymentProject.id,
-      employeeId: rahul.id,
+      employeeId: rahulEmp.id,
+      createdByEmployeeId: rahulEmp.id,
+      reviewedByEmployeeId: sarahEmp.id,
+      reviewedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       sourceId: sourceMeeting.id,
-      tagsJson: JSON.stringify(['billing-hours', 'maintenance', 'sqs', 'restriction', 'production-safety']),
-      reasoning: 'Explicit organizational policy verified across 2 incident reports.',
-      problemsJson: JSON.stringify(['In-flight token invalidation', 'SQS transaction duplication']),
-      solutionsJson: JSON.stringify(['Queue all maintenance outside 09:00 - 18:00 EST', 'Drain SQS consumer workers prior to rolling restart']),
-      dependenciesJson: JSON.stringify(['AWS SQS FIFO', 'Redis Cache', 'Billing Engine']),
+      tagsJson: JSON.stringify(['payment', 'deployment', 'restriction', 'sla', 'production']),
+      problemsJson: JSON.stringify(['Dropped customer checkouts', 'Uncommitted ledger states']),
+      solutionsJson: JSON.stringify(['Deploy only between 02:00 - 05:00 EST']),
+      dependenciesJson: JSON.stringify(['Kubernetes Ingress', 'Payment Service Pods']),
       relatedEntitiesJson: JSON.stringify(['Payment System', 'Rahul Sharma']),
-      hasConflict: true,
     },
   });
 
   const item3 = await prisma.knowledgeItem.create({
     data: {
-      title: 'Restart Service Immediately After Deployment (CONFLICTING)',
-      summary: 'Automated CI/CD script triggers immediate pod bounce after docker tag update to clear JVM metaspace.',
-      content: 'Legacy script in deploy-payment.sh executes kubectl rollout restart immediately after helm upgrade to flush dirty JVM metaspace allocations.',
-      originalSourceText: 'Always restart the service immediately after deployment to flush dirty metaspace buffers.',
-      aiInterpretation: 'Contradicts the strict billing-hour restriction rule. If deployed during midday, this script causes the exact outage prohibited by rule #2.',
-      whyItMatters: 'Demonstrates active operational conflict that must be reconciled.',
-      type: 'WARNING',
+      title: 'PgBouncer Connection Starvation Under Sub-Job Fanout',
+      summary: 'When batch settlement cron runs at midnight, set worker batch size to 25 to prevent PgBouncer connection pool exhaustion across the cluster.',
+      content: 'The midnight settlement engine in `settlement-worker.jar` defaults to 4 parallel worker threads. Each thread acquires 30 connections to PostgreSQL through PgBouncer. Under high volume, this claims 120 client connections, exceeding the default pool ceiling of 100. This starvates incoming web checkout queries, causing sudden 500 errors. Override JVM flag: `-Dworker.batch.size=25` to cap pool usage at 60 connections.',
+      originalSourceText: 'Thread: PgBouncer connection exhaustion during midnight settlement cron. Rahul: "The worker batch size defaults to 50 in application.yml, but the settlement engine spawns 4 parallel sub-jobs, saturating all 120 sockets."',
+      aiInterpretation: 'A concurrency mismatch exists between worker thread pools and PgBouncer maximum client quotas.',
+      whyItMatters: 'Causes catastrophic midnight outages affecting worldwide user payments.',
+      type: 'TROUBLESHOOTING',
       risk: 'HIGH',
       importance: 8,
-      confidence: 0.88,
+      confidence: 0.92,
       status: 'APPROVED',
-      freshness: 'STALE',
-      lastVerifiedAt: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000), // 85 days ago
+      visibility: 'TEAM',
+      freshness: 'FRESH',
+      lastVerifiedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      verifiedBy: 'Rahul Sharma',
       projectId: paymentProject.id,
-      employeeId: arjun.id,
-      sourceId: sourceRunbook.id,
-      tagsJson: JSON.stringify(['deployment', 'jvm', 'conflict', 'rollback']),
-      hasConflict: true,
+      employeeId: rahulEmp.id,
+      createdByEmployeeId: rahulEmp.id,
+      reviewedByEmployeeId: sarahEmp.id,
+      reviewedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+      sourceId: sourceMeeting.id,
+      tagsJson: JSON.stringify(['postgres', 'pgbouncer', 'settlement', 'cron', 'connection-pool']),
+      problemsJson: JSON.stringify(['PgBouncer connection starvation', 'Midnight 500 errors during checkout']),
+      solutionsJson: JSON.stringify(['Set worker.batch.size=25', 'Cap pool allocation to 60 connections']),
+      dependenciesJson: JSON.stringify(['PgBouncer', 'PostgreSQL 16', 'Settlement Worker']),
+      relatedEntitiesJson: JSON.stringify(['Payment System', 'Rahul Sharma', 'PostgreSQL']),
     },
   });
 
   const item4 = await prisma.knowledgeItem.create({
     data: {
-      title: 'PostgreSQL Connection Pool Exhaustion during Midnight Reconciliation',
-      summary: 'Settlement cron job saturates PgBouncer sockets unless worker concurrency is throttled to 15.',
-      content: 'The midnight batch settlement job defaults to 4 parallel thread pools each allocating up to 30 active database connections, exhausting the 100-connection client limit on PgBouncer. When this happens, API requests stall with "FATAL: remaining connection slots are reserved for non-replication superuser connections". Solution: Set `spring.batch.settlement.max-threads=15` in Kubernetes ConfigMap.',
-      originalSourceText: 'PgBouncer connection exhaustion during midnight settlement cron. Rahul: The worker batch size defaults to 50 in application.yml, but the settlement engine spawns 4 parallel sub-jobs, saturating all 120 sockets.',
-      aiInterpretation: 'Direct database resource contention between background batch processing and real-time payment ingestion.',
-      whyItMatters: 'Midnight payments get rejected if the batch job is not throttled.',
-      type: 'TROUBLESHOOTING',
-      risk: 'HIGH',
-      importance: 9,
-      confidence: 0.93,
+      title: 'NovaTech Architecture Blueprint & Service Topology',
+      summary: 'Comprehensive overview of microservices topology, API gateway routing, event streaming bus, and multi-region failover architecture.',
+      content: 'NovaTech operates a hybrid event-driven architecture. Client applications connect via Cloudflare Edge to Envoy Gateway. State is persisted in Aurora PostgreSQL clusters with Redis for sub-millisecond caching and Kafka for downstream event propagation. All services are deployed in AWS us-east-1 and us-west-2.',
+      originalSourceText: 'Standard architectural documentation for enterprise platform services.',
+      aiInterpretation: 'Official architecture specification for all engineers.',
+      whyItMatters: 'Foundational mental model for service development and operational debugging.',
+      type: 'ARCHITECTURE',
+      risk: 'LOW',
+      importance: 8,
+      confidence: 0.98,
       status: 'APPROVED',
+      visibility: 'PUBLIC',
       freshness: 'FRESH',
-      lastVerifiedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-      verifiedBy: 'Rahul Sharma',
+      lastVerifiedAt: new Date(),
+      verifiedBy: 'Marcus Vance',
       projectId: paymentProject.id,
-      employeeId: rahul.id,
-      sourceId: sourceSlack.id,
-      tagsJson: JSON.stringify(['postgresql', 'pgbouncer', 'settlement', 'concurrency', 'troubleshooting']),
-      problemsJson: JSON.stringify(['Database connection pool exhaustion', 'Midnight payment failure']),
-      solutionsJson: JSON.stringify(['Throttle settlement threads to 15', 'Increase PgBouncer reserve pool size']),
-      dependenciesJson: JSON.stringify(['PostgreSQL 16', 'PgBouncer', 'Spring Batch']),
-      relatedEntitiesJson: JSON.stringify(['Payment System', 'Rahul Sharma', 'PostgreSQL']),
+      employeeId: marcusEmp.id,
+      createdByEmployeeId: marcusEmp.id,
+      reviewedByEmployeeId: marcusEmp.id,
+      reviewedAt: new Date(),
+      sourceId: sourceRunbook.id,
+      tagsJson: JSON.stringify(['architecture', 'topology', 'microservices', 'overview']),
+      problemsJson: JSON.stringify([]),
+      solutionsJson: JSON.stringify(['Reference for cross-service communication']),
+      dependenciesJson: JSON.stringify(['Envoy', 'Kafka', 'PostgreSQL']),
+      relatedEntitiesJson: JSON.stringify(['NovaTech Platform', 'Marcus Vance']),
     },
   });
 
   const item5 = await prisma.knowledgeItem.create({
     data: {
-      title: 'Zero-Downtime Payment Service Rolling Deployment Checklist',
-      summary: 'Required pre-flight checks: Redis replication health, PgBouncer pool reserve, SQS consumer drain, and 30s readiness probe grace period.',
-      content: '1. Check Redis master-replica replication lag (`INFO replication` < 100ms)\n2. Verify PgBouncer has at least 30 free server connections\n3. Pre-warm new Kubernetes pods with synthetic health-check token before switching traffic\n4. Monitor Chase Paymentech HTTP 200 response ratio for 5 minutes post rollout\n5. Never run db migrations concurrently with active traffic without backwards-compatible columns.',
-      originalSourceText: 'Deployment requires verifying Redis cluster replica lag and setting PgBouncer pool max connections to 80. Ensure zero-downtime rolling restart with 30s readiness probe grace period.',
-      aiInterpretation: 'Structured operational checklist critical for reliable continuous deployment.',
-      whyItMatters: 'Failure to follow pre-flight checks leads to intermediate 502 Bad Gateway responses during Kubernetes rolling updates.',
+      title: 'Developer Onboarding & Local Environment Setup Guide',
+      summary: 'Step-by-step setup guide for configuring local Docker compose stack, running mock payment webhooks, and seeding test ledger databases.',
+      content: 'Welcome to NovaTech. Clone the platform repository and run `make bootstrap-dev`. This spins up local PostgreSQL, Redis, Kafka, and WireMock payment simulator containers. Use port 8080 for billing API and port 3000 for customer portal.',
+      originalSourceText: 'Standard engineer onboarding manual.',
+      aiInterpretation: 'Onboarding guide for new team members.',
+      whyItMatters: 'Reduces time-to-first-commit from 3 weeks to 2 days for new engineers.',
       type: 'PROCESS',
-      risk: 'MEDIUM',
-      importance: 8,
-      confidence: 0.92,
+      risk: 'LOW',
+      importance: 7,
+      confidence: 0.95,
       status: 'APPROVED',
+      visibility: 'PUBLIC',
       freshness: 'FRESH',
-      lastVerifiedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      verifiedBy: 'Arjun Verma',
+      lastVerifiedAt: new Date(),
+      verifiedBy: 'Sarah Lin',
       projectId: paymentProject.id,
-      employeeId: arjun.id,
+      employeeId: alexEmp.id,
+      createdByEmployeeId: sarahEmp.id,
+      reviewedByEmployeeId: sarahEmp.id,
+      reviewedAt: new Date(),
       sourceId: sourceRunbook.id,
-      tagsJson: JSON.stringify(['deployment', 'runbook', 'kubernetes', 'checklist']),
-      problemsJson: JSON.stringify(['502 Bad Gateway during pod rollout']),
-      solutionsJson: JSON.stringify(['Follow 5-step rolling deployment checklist']),
-      dependenciesJson: JSON.stringify(['Kubernetes', 'Redis', 'PgBouncer']),
-      relatedEntitiesJson: JSON.stringify(['Payment System', 'Arjun Verma']),
+      tagsJson: JSON.stringify(['onboarding', 'setup', 'docker', 'developer-guide']),
+      problemsJson: JSON.stringify([]),
+      solutionsJson: JSON.stringify(['Standard local dev configuration']),
+      dependenciesJson: JSON.stringify(['Docker', 'Make']),
+      relatedEntitiesJson: JSON.stringify(['Alex Chen', 'Sarah Lin']),
     },
   });
 
-  const item6 = await prisma.knowledgeItem.create({
+  // PENDING REVIEW ITEMS (Submitted by Rahul, waiting for Sarah's review!)
+  const pendingItem1 = await prisma.knowledgeItem.create({
     data: {
-      title: 'Legacy Payment API Idempotency Key Handling Edge Case',
-      summary: 'Legacy payment gateway v1.4 treats missing X-Idempotency-Key as auto-retryable instead of rejecting with 400 Bad Request.',
-      content: 'Older internal mobile app versions (< v3.2) occasionally send card charge payloads without the `X-Idempotency-Key` header. Instead of throwing HTTP 400, the legacy controller synthesizes a SHA-256 hash using `userId + amount + minuteTimestamp`. If the user submits twice in the exact same minute, the second charge is silently skipped. Modern clients must always send explicit UUIDv4 idempotency keys.',
-      originalSourceText: 'Older mobile app versions omit idempotency key. We synthesize a hash from user+amount+minute which causes collision if rapid tap occurs.',
-      aiInterpretation: 'Subtle edge case logic preserved in legacy Spring Boot controller that new developers frequently break when refactoring.',
-      whyItMatters: 'Refactoring this without understanding legacy synthesis causes either duplicate charges or dropped orders for millions of mobile users.',
-      type: 'EDGE_CASE',
+      title: 'Redis Shard Balancing Under High TPS Burst',
+      summary: 'Dynamic cluster hash slot rebalancing requires manual migration pauses during Black Friday volume spikes to prevent transient key misses.',
+      content: 'When cluster utilization exceeds 85%, Redis auto-resharding triggers hashslot migration. In flight read requests for user session tokens experience 100ms pauses. We must run `redis-cli --cluster rebalance --pipeline 10` before major sales events to lock slot distributions.',
+      originalSourceText: 'From Rahul notes: Remember to pause resharding before holiday sales or token validation drops 3% of incoming checkouts.',
+      aiInterpretation: 'Operational procedure to avoid transient cache misses during Redis cluster rebalancing.',
+      whyItMatters: 'Prevents checkout drops and user logouts during peak retail windows.',
+      type: 'OPERATIONAL_TIP',
       risk: 'HIGH',
       importance: 8,
-      confidence: 0.89,
-      status: 'APPROVED',
-      freshness: 'AGING',
-      lastVerifiedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+      confidence: 0.93,
+      status: 'PENDING_REVIEW',
+      visibility: 'TEAM',
+      freshness: 'UNVERIFIED',
       projectId: paymentProject.id,
-      employeeId: rahul.id,
-      sourceId: sourceRunbook.id,
-      tagsJson: JSON.stringify(['idempotency', 'legacy-api', 'mobile', 'edge-case']),
-      problemsJson: JSON.stringify(['Silent order skipping on rapid tap', 'Legacy client compatibility']),
-      solutionsJson: JSON.stringify(['Preserve legacy SHA-256 fallback hash generator until mobile v3.2 deprecation']),
-      dependenciesJson: JSON.stringify(['Spring Boot', 'Mobile Gateway v1.4']),
-      relatedEntitiesJson: JSON.stringify(['Payment System', 'Rahul Sharma', 'Java']),
+      employeeId: rahulEmp.id,
+      createdByEmployeeId: rahulEmp.id,
+      tagsJson: JSON.stringify(['redis', 'resharding', 'cluster', 'tps-burst']),
+      problemsJson: JSON.stringify(['Transient session cache misses', 'Checkout drops']),
+      solutionsJson: JSON.stringify(['Run manual rebalance with pipeline 10 before volume spikes']),
+      dependenciesJson: JSON.stringify(['Redis Cluster']),
+      relatedEntitiesJson: JSON.stringify(['Payment System', 'Rahul Sharma']),
     },
   });
 
-  const item7 = await prisma.knowledgeItem.create({
+  const pendingItem2 = await prisma.knowledgeItem.create({
     data: {
-      title: 'Next.js 15 Client Hydration Mismatch with Geo-IP Header',
-      summary: 'Customer portal header flashing caused by Cloudflare CF-IPCountry header mismatch between Edge SSR and browser hydration.',
-      content: 'When serving localized currency in Customer Portal, Cloudflare passes `CF-IPCountry` to the Next.js server route. If the browser executes `Intl.NumberFormat` with client system locale differing from IP geo-location, React 19 emits hydration mismatch warning #418. Solution: Defer currency rendering until `useEffect` mount or pass currency explicitly through cookies.',
-      originalSourceText: 'Hydration mismatch on currency symbol for European users travelling abroad. Edge gets CF-IPCountry=DE while laptop locale is en-US.',
-      aiInterpretation: 'Frontend edge-rendering edge case with Next.js App Router and Cloudflare proxy headers.',
-      whyItMatters: 'Causes visual layout shifts and prevents React client-side event binding.',
-      type: 'KNOWN_BUG',
-      risk: 'LOW',
-      importance: 6,
-      confidence: 0.94,
-      status: 'APPROVED',
-      freshness: 'FRESH',
-      lastVerifiedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      verifiedBy: 'Priya Mehta',
-      projectId: portalProject.id,
-      employeeId: priya.id,
-      sourceId: sourceRunbook.id,
-      tagsJson: JSON.stringify(['nextjs', 'react', 'hydration', 'cloudflare', 'frontend']),
-      problemsJson: JSON.stringify(['React Hydration Error #418', 'Currency visual flicker']),
-      solutionsJson: JSON.stringify(['Use client-side hydration mount flag or cookie-based locale persistence']),
-      dependenciesJson: JSON.stringify(['Next.js 15', 'React 19', 'Cloudflare']),
-      relatedEntitiesJson: JSON.stringify(['Customer Portal', 'Priya Mehta', 'Next.js']),
+      title: 'Stripe Webhook Idempotency Key Handling',
+      summary: 'Stripe charge webhook events must always be verified against the local Redis idempotency hash with a 72-hour TTL to prevent double customer refunds.',
+      content: 'Stripe retries failed webhook deliveries up to 12 times over 72 hours. When our database experiences transient connection timeouts, Stripe retries. If the consumer does not check Redis key `stripe:event:{id}` before calling `ledgerService.creditRefund()`, customers receive duplicate credits.',
+      originalSourceText: 'We had an incident where 4 refunds were processed 3 times because the webhook consumer didn’t lock the event ID in Redis.',
+      aiInterpretation: 'Critical idempotency guard in the billing webhook listener.',
+      whyItMatters: 'Financial loss from duplicate refund issuance.',
+      type: 'TROUBLESHOOTING',
+      risk: 'CRITICAL',
+      importance: 9,
+      confidence: 0.96,
+      status: 'PENDING_REVIEW',
+      visibility: 'TEAM',
+      freshness: 'UNVERIFIED',
+      projectId: paymentProject.id,
+      employeeId: rahulEmp.id,
+      createdByEmployeeId: rahulEmp.id,
+      tagsJson: JSON.stringify(['stripe', 'webhooks', 'idempotency', 'refunds']),
+      problemsJson: JSON.stringify(['Duplicate customer refund issuance', 'Ledger divergence']),
+      solutionsJson: JSON.stringify(['Check Redis idempotency key with 72h TTL']),
+      dependenciesJson: JSON.stringify(['Stripe API', 'Redis']),
+      relatedEntitiesJson: JSON.stringify(['Payment System', 'Rahul Sharma']),
     },
   });
 
-  // Embeddings generation for all items
-  const items = [item1, item2, item3, item4, item5, item6, item7];
-  for (const it of items) {
+  const pendingItem3 = await prisma.knowledgeItem.create({
+    data: {
+      title: 'Payment Failover Secondary Gateway Manual Trigger',
+      summary: 'When primary Chase Paymentech 3DS proxy drops below 80% success rate, run the manual Kubernetes failover job to switch payment traffic to Adyen backup processor.',
+      content: 'Execute: `kubectl apply -f k8s/billing-router/failover-adyen.yaml`. This commands the billing router to divert new authorizations to Adyen while draining inflight transactions. Requires confirmation on on-call Slack channel `#payments-oncall`.',
+      originalSourceText: 'The manual switch to Adyen is in k8s/billing-router/failover-adyen.yaml, but only Rahul and Sarah usually know how to trigger it.',
+      aiInterpretation: 'Emergency operational failover runbook for high-severity card gateway outages.',
+      whyItMatters: 'Single point of failure recovery during catastrophic tier-1 vendor outages.',
+      type: 'TROUBLESHOOTING',
+      risk: 'CRITICAL',
+      importance: 10,
+      confidence: 0.95,
+      status: 'PENDING_REVIEW',
+      visibility: 'TEAM',
+      freshness: 'UNVERIFIED',
+      projectId: paymentProject.id,
+      employeeId: rahulEmp.id,
+      createdByEmployeeId: rahulEmp.id,
+      tagsJson: JSON.stringify(['failover', 'adyen', 'chase', 'emergency-runbook']),
+      problemsJson: JSON.stringify(['Complete card processing blackout', 'Vendor outage']),
+      solutionsJson: JSON.stringify(['Execute failover-adyen.yaml job within 90s']),
+      dependenciesJson: JSON.stringify(['Kubernetes', 'Adyen Backup API']),
+      relatedEntitiesJson: JSON.stringify(['Payment System', 'Rahul Sharma', 'Sarah Lin']),
+    },
+  });
+
+  // RESTRICTED ITEM (Executive Risk Audit - Visible only to Marcus Vance)
+  const restrictedItem = await prisma.knowledgeItem.create({
+    data: {
+      title: 'Q3 Executive Risk & Single Point of Failure Concentration Audit',
+      summary: 'Confidential executive briefing detailing institutional continuity vulnerability: 73% of core payment engine institutional memory resides with departing engineer Rahul Sharma.',
+      content: 'This executive audit evaluates organizational knowledge retention risk. Finding: Rahul Sharma is the sole engineer capable of resolving midnight batch settlement stalls and gateway failovers. Offboarding without structured tacit knowledge capture presents an estimated $420,000/day outage liability risk. Immediate action: Initiate KnowledgeVault Exit Mode recovery sessions.',
+      originalSourceText: 'Confidential HR and VP Engineering institutional risk review report.',
+      aiInterpretation: 'Executive risk analysis restricted to organizational leadership.',
+      whyItMatters: 'Enterprise continuity risk and valuation protection during senior talent transitions.',
+      type: 'WARNING',
+      risk: 'CRITICAL',
+      importance: 10,
+      confidence: 0.99,
+      status: 'APPROVED',
+      visibility: 'RESTRICTED',
+      freshness: 'FRESH',
+      lastVerifiedAt: new Date(),
+      verifiedBy: 'Marcus Vance',
+      projectId: paymentProject.id,
+      employeeId: marcusEmp.id,
+      createdByEmployeeId: marcusEmp.id,
+      reviewedByEmployeeId: marcusEmp.id,
+      reviewedAt: new Date(),
+      tagsJson: JSON.stringify(['executive-audit', 'risk-concentration', 'spof', 'offboarding']),
+      problemsJson: JSON.stringify(['Single point of failure concentration', 'Departure continuity vulnerability']),
+      solutionsJson: JSON.stringify(['Enforce KnowledgeVault Exit Mode interviews before departure']),
+      dependenciesJson: JSON.stringify(['Leadership Governance']),
+      relatedEntitiesJson: JSON.stringify(['Marcus Vance', 'Rahul Sharma', 'Payment System']),
+    },
+  });
+
+  // Generate embeddings for all items
+  const allItems = [item1, item2, item3, item4, item5, pendingItem1, pendingItem2, pendingItem3, restrictedItem];
+  for (const it of allItems) {
     const textToEmbed = `${it.title} ${it.summary} ${it.content} ${it.type} ${it.whyItMatters}`;
     const vec = generateDeterministicEmbedding(textToEmbed);
     await prisma.knowledgeEmbedding.create({
@@ -521,20 +654,69 @@ async function main() {
     });
   }
 
-  // 7. Knowledge Conflict Record
-  await prisma.knowledgeConflict.create({
+  // 7. Initial Knowledge Reviews
+  await prisma.knowledgeReview.create({
     data: {
-      itemAId: item2.id,
-      itemBId: item3.id,
-      title: 'Deployment Timing vs. Strict Billing-Hour Restriction Conflict',
-      description: 'Knowledge Item #2 ("Strict Billing-Hour Execution Restriction") forbids restarting the payment service between 09:00 - 18:00 EST to prevent transaction drops. However, Knowledge Item #3 ("Restart Service Immediately After Deployment") specifies automated immediate restarts after helm deploy. A mid-day deployment causes immediate conflict.',
-      status: 'DETECTED',
-      resolutionNotes: 'Recommended resolution: Gate automated CI/CD restart script with time-of-day condition or manual approvals during 09:00 - 18:00 EST window.',
-      detectedAt: new Date(),
+      knowledgeItemId: item1.id,
+      reviewerName: 'Sarah Lin',
+      reviewerRole: 'MANAGER',
+      action: 'APPROVE',
+      reason: 'Verified against March 12 post-mortem and gateway load-test telemetry. Clean technical documentation.',
     },
   });
 
-  // 8. Knowledge Gaps
+  await prisma.knowledgeReview.create({
+    data: {
+      knowledgeItemId: item2.id,
+      reviewerName: 'Sarah Lin',
+      reviewerRole: 'MANAGER',
+      action: 'APPROVE',
+      reason: 'Essential business rule. Approved and locked for all billing releases.',
+    },
+  });
+
+  // 8. Exit Mode Session for Rahul Sharma
+  const session = await prisma.exitSession.create({
+    data: {
+      employeeId: rahulEmp.id,
+      status: 'ACTIVE',
+      initialCoverage: 54.0,
+      initialGaps: 4,
+      itemsRecovered: 0,
+      summary: 'Knowledge Recovery Interview for Rahul Sharma (Staff Infrastructure Engineer). Prioritizing single-point-of-failure settlement operations and third-party failover procedures.',
+    },
+  });
+
+  await prisma.exitQuestion.createMany({
+    data: [
+      {
+        sessionId: session.id,
+        question: 'I found strong documentation around architecture and deployment checklists, but very little about production troubleshooting. What usually breaks during high-volume billing deployment?',
+        category: 'Troubleshooting',
+        rationale: 'Troubleshooting coverage is currently in the critical zone. Single point of failure recovery.',
+        priority: 'CRITICAL',
+        order: 1,
+      },
+      {
+        sessionId: session.id,
+        question: 'When the Chase Paymentech 3D-Secure gateway times out or hangs, what is the exact failover protocol and which manual command triggers fallback to our secondary processor?',
+        category: 'Dependencies',
+        rationale: 'Vendor escalation and out-of-band clearance protocol is completely unwritten.',
+        priority: 'HIGH',
+        order: 2,
+      },
+      {
+        sessionId: session.id,
+        question: 'What undocumented edge cases or race conditions exist in the batch settlement script `reconcile_v1.py` that new engineers should avoid modifying without caution?',
+        category: 'Edge Cases',
+        rationale: 'Reconciliation script heuristics are undocumented.',
+        priority: 'HIGH',
+        order: 3,
+      },
+    ],
+  });
+
+  // 9. Knowledge Gaps
   await prisma.knowledgeGap.create({
     data: {
       title: 'Production Failure Recovery & Payment Failover Handling',
@@ -546,10 +728,9 @@ async function main() {
       suggestedQuestionsJson: JSON.stringify([
         'What production failures have you encountered that aren’t documented anywhere?',
         'When Chase Paymentech primary gateway hangs without responding, what is the exact manual failover command?',
-        'Which payment transactions require manual ledger reconciliation after an ungraceful crash?',
       ]),
       projectId: paymentProject.id,
-      employeeId: rahul.id,
+      employeeId: rahulEmp.id,
       detectedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
     },
   });
@@ -564,10 +745,9 @@ async function main() {
       suggestedAction: 'Capture personal escalation contacts and shared portal credentials before Rahul departs.',
       suggestedQuestionsJson: JSON.stringify([
         'Which vendor contacts should a replacement know about, and when should they be contacted?',
-        'Who is our direct engineering liaison at Chase when automated API responses fail?',
       ]),
       projectId: paymentProject.id,
-      employeeId: rahul.id,
+      employeeId: rahulEmp.id,
     },
   });
 
@@ -579,16 +759,12 @@ async function main() {
       impact: 'HIGH',
       status: 'OPEN',
       suggestedAction: 'Have Rahul document the rounding threshold and unmapped merchant category codes.',
-      suggestedQuestionsJson: JSON.stringify([
-        'What undocumented edge cases occur during month-end batch settlement?',
-        'What mistakes should a replacement avoid when modifying the reconciliation script?',
-      ]),
       projectId: paymentProject.id,
-      employeeId: rahul.id,
+      employeeId: rahulEmp.id,
     },
   });
 
-  // 9. Coverage Scores
+  // 10. Coverage Scores
   const categories = [
     { cat: 'Architecture', score: 90.0, exp: 10, cap: 9, expl: 'Extensive architectural diagrams and service interface definitions exist.' },
     { cat: 'Deployment', score: 70.0, exp: 10, cap: 7, expl: 'Good CI/CD automation guides exist, but rollback instructions are sparse.' },
@@ -609,253 +785,95 @@ async function main() {
         totalCaptured: c.cap,
         explanation: c.expl,
         projectId: paymentProject.id,
-        employeeId: rahul.id,
+        employeeId: rahulEmp.id,
       },
     });
   }
 
-  // 10. Knowledge Relationships (Knowledge Graph!)
-  await prisma.knowledgeRelationship.createMany({
-    data: [
-      {
-        sourceEntityId: rahul.id,
-        sourceEntityType: 'EMPLOYEE',
-        sourceLabel: 'Rahul Sharma',
-        targetEntityId: paymentProject.id,
-        targetEntityType: 'PROJECT',
-        targetLabel: 'Payment System',
-        relationshipType: 'OWNS',
-        weight: 1.0,
-        description: 'Principal architect and core contributor for 4 years',
-      },
-      {
-        sourceEntityId: rahul.id,
-        sourceEntityType: 'EMPLOYEE',
-        sourceLabel: 'Rahul Sharma',
-        targetEntityId: java.id,
-        targetEntityType: 'TECHNOLOGY',
-        targetLabel: 'Java',
-        relationshipType: 'USES',
-        weight: 0.9,
-      },
-      {
-        sourceEntityId: rahul.id,
-        sourceEntityType: 'EMPLOYEE',
-        sourceLabel: 'Rahul Sharma',
-        targetEntityId: spring.id,
-        targetEntityType: 'TECHNOLOGY',
-        targetLabel: 'Spring Boot',
-        relationshipType: 'USES',
-        weight: 0.95,
-      },
-      {
-        sourceEntityId: paymentProject.id,
-        sourceEntityType: 'PROJECT',
-        sourceLabel: 'Payment System',
-        targetEntityId: item1.id,
-        targetEntityType: 'KNOWLEDGE',
-        targetLabel: 'Payment API Timeout in Peak Billing',
-        relationshipType: 'DOCUMENTS',
-        weight: 0.9,
-      },
-      {
-        sourceEntityId: paymentProject.id,
-        sourceEntityType: 'PROJECT',
-        sourceLabel: 'Payment System',
-        targetEntityId: item2.id,
-        targetEntityType: 'KNOWLEDGE',
-        targetLabel: 'Strict Billing-Hour Restriction',
-        relationshipType: 'DOCUMENTS',
-        weight: 0.95,
-      },
-      {
-        sourceEntityId: item1.id,
-        sourceEntityType: 'KNOWLEDGE',
-        sourceLabel: 'Payment API Timeout in Peak Billing',
-        targetEntityId: item4.id,
-        targetEntityType: 'KNOWLEDGE',
-        targetLabel: 'PgBouncer Pool Exhaustion',
-        relationshipType: 'ENCOUNTERS',
-        weight: 0.75,
-        description: 'Timeouts cause retry floods that exacerbate database socket starvation',
-      },
-      {
-        sourceEntityId: item2.id,
-        sourceEntityType: 'KNOWLEDGE',
-        sourceLabel: 'Strict Billing-Hour Restriction',
-        targetEntityId: item3.id,
-        targetEntityType: 'KNOWLEDGE',
-        targetLabel: 'Restart Service Immediately',
-        relationshipType: 'CONFLICTS_WITH',
-        weight: 1.0,
-        description: 'Direct operational contradiction between CI/CD script and business safety rule',
-      },
-      {
-        sourceEntityId: item5.id,
-        sourceEntityType: 'KNOWLEDGE',
-        sourceLabel: 'Zero-Downtime Deployment Checklist',
-        targetEntityId: sourceRunbook.id,
-        targetEntityType: 'DOCUMENTATION',
-        targetLabel: 'Payment Service Deployment Guide v3.4',
-        relationshipType: 'DOCUMENTS',
-        weight: 0.9,
-      },
-      {
-        sourceEntityId: arjun.id,
-        sourceEntityType: 'EMPLOYEE',
-        sourceLabel: 'Arjun Verma',
-        targetEntityId: paymentProject.id,
-        targetEntityType: 'PROJECT',
-        targetLabel: 'Payment System',
-        relationshipType: 'DEPLOYS',
-        weight: 0.85,
-      },
-      {
-        sourceEntityId: priya.id,
-        sourceEntityType: 'EMPLOYEE',
-        sourceLabel: 'Priya Mehta',
-        targetEntityId: portalProject.id,
-        targetEntityType: 'PROJECT',
-        targetLabel: 'Customer Portal',
-        relationshipType: 'OWNS',
-        weight: 0.9,
-      },
-      {
-        sourceEntityId: priya.id,
-        sourceEntityType: 'EMPLOYEE',
-        sourceLabel: 'Priya Mehta',
-        targetEntityId: item7.id,
-        targetEntityType: 'KNOWLEDGE',
-        targetLabel: 'Next.js 15 Client Hydration Mismatch',
-        relationshipType: 'SOLVES',
-        weight: 0.85,
-      },
-    ],
-  });
-
-  // 11. Initial Exit Session for Rahul
-  const session = await prisma.exitSession.create({
-    data: {
-      employeeId: rahul.id,
-      status: 'ACTIVE',
-      initialCoverage: 54.0,
-      initialGaps: 5,
-      itemsRecovered: 0,
-      summary: 'Exit interview initialized for Senior Backend Developer Rahul Sharma. Primary focus: Production failure handling, payment gateway failover, and undocumented settlement scripts.',
-      transcriptJson: JSON.stringify([]),
-    },
-  });
-
-  await prisma.exitQuestion.create({
-    data: {
-      sessionId: session.id,
-      question: 'I found strong documentation around architecture and deployment checklists, but very little about production troubleshooting. What usually breaks during high-volume billing deployment?',
-      category: 'Troubleshooting',
-      rationale: 'Troubleshooting coverage is currently only 50% for Payment System. Rahul is the sole developer who responded to the March 12 outage.',
-      priority: 'CRITICAL',
-      order: 1,
-    },
-  });
-
-  await prisma.exitQuestion.create({
-    data: {
-      sessionId: session.id,
-      question: 'When the Chase Paymentech 3D-Secure gateway times out or hangs, what is the exact failover protocol and which manual command triggers fallback to our secondary processor?',
-      category: 'Dependencies',
-      rationale: 'No documented instructions exist in any wiki or code comments for activating the secondary Adyen backup pipeline.',
-      priority: 'HIGH',
-      order: 2,
-    },
-  });
-
-  await prisma.exitQuestion.create({
-    data: {
-      sessionId: session.id,
-      question: 'Are there any undocumented behaviors or race conditions in the legacy reconciliation script `reconcile_v1.py` that new engineers should be warned about before modifying it?',
-      category: 'Edge Cases',
-      rationale: 'Edge cases coverage is at 20% (Critical Risk). This Python script runs automatically every night.',
-      priority: 'HIGH',
-      order: 3,
-    },
-  });
-
-  // 12. Recent Activities
-  await prisma.activity.createMany({
-    data: [
-      {
-        type: 'RISK_ALERT',
-        title: 'Single Point of Knowledge Failure Detected',
-        description: 'Rahul Sharma holds 73% of unique operational knowledge for the Payment System and is marked as departing.',
-        employeeId: rahul.id,
-        projectId: paymentProject.id,
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      },
-      {
-        type: 'CONFLICT_DETECTED',
-        title: 'Operational Conflict Flagged by AI',
-        description: 'Conflict detected between "Strict Billing-Hour Restriction" and "Restart Service Immediately After Deployment".',
-        projectId: paymentProject.id,
-        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      },
-      {
-        type: 'GAP_DETECTED',
-        title: 'Critical Knowledge Gap Identified',
-        description: 'Production Failure Recovery & Payment Failover Handling has 0 verified runbooks.',
-        projectId: paymentProject.id,
-        createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
-      },
-      {
-        type: 'SOURCE_PROCESSED',
-        title: 'Processed: Core Infrastructure SRE Slack Export',
-        description: 'Extracted 6 verified knowledge items and 2 database troubleshooting procedures.',
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      },
-      {
-        type: 'VERIFICATION',
-        title: 'Knowledge Item Verified',
-        description: 'Rahul Sharma verified "Payment API Timeout in Peak Billing Windows" (Confidence: 91%).',
-        employeeId: rahul.id,
-        projectId: paymentProject.id,
-        createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
-      },
-    ],
-  });
-
-  // 13. Notifications
+  // 11. Role-Scoped Notifications
   await prisma.notification.createMany({
     data: [
       {
-        type: 'HIGH_RISK_CONCENTRATION',
-        title: 'Knowledge Concentration Warning',
-        message: 'Rahul Sharma holds 73% of Payment System operational knowledge. Exit Mode recommended.',
-        link: `/exit-mode/${rahul.id}`,
-        severity: 'CRITICAL',
+        userId: sarahEmp.id,
+        employeeId: sarahEmp.id,
+        type: 'REVIEW_REQUEST',
+        title: 'Knowledge Awaiting Review',
+        message: 'Rahul Sharma submitted "Redis Shard Balancing Under High TPS Burst" for manager approval.',
+        link: '/reviews',
+        severity: 'INFO',
       },
       {
-        type: 'CONFLICT',
-        title: 'Knowledge Conflict Detected',
-        message: 'Payment deployment instructions contain contradictory guidance regarding service restarts.',
-        link: '/knowledge',
+        userId: sarahEmp.id,
+        employeeId: sarahEmp.id,
+        type: 'REVIEW_REQUEST',
+        title: 'Critical Knowledge Submission',
+        message: 'Rahul Sharma submitted "Stripe Webhook Idempotency Key Handling" (Risk: CRITICAL).',
+        link: '/reviews',
         severity: 'WARNING',
       },
       {
-        type: 'CRITICAL_GAP',
-        title: 'Critical Knowledge Gap',
-        message: 'Payment failure handling is missing documentation. 3 targeted questions generated.',
-        link: '/gaps',
-        severity: 'CRITICAL',
+        userId: rahulEmp.id,
+        employeeId: rahulEmp.id,
+        type: 'KNOWLEDGE_APPROVED',
+        title: 'Knowledge Approved',
+        message: 'Sarah Lin approved your submission "Payment API Timeout in Peak Billing Windows".',
+        link: `/knowledge/${item1.id}`,
+        severity: 'SUCCESS',
       },
       {
+        userId: alexEmp.id,
+        employeeId: alexEmp.id,
         type: 'DOCUMENT_PROCESSED',
-        title: 'Source Processed Successfully',
-        message: 'Payment Service Architecture & Deployment Guide v3.4 indexed with 8 items extracted.',
-        link: `/sources/${sourceRunbook.id}`,
-        severity: 'SUCCESS',
+        title: 'Recommended Onboarding Runbook',
+        message: 'Explore the "Developer Onboarding & Local Environment Setup Guide" to start your ramp-up.',
+        link: `/knowledge/${item5.id}`,
+        severity: 'INFO',
+      },
+      {
+        userId: marcusEmp.id,
+        employeeId: marcusEmp.id,
+        type: 'HIGH_RISK_CONCENTRATION',
+        title: 'Organization Risk Alert',
+        message: 'Rahul Sharma holds 73% of Payment System operational knowledge. Offboarding recovery active.',
+        link: `/exit-mode/${rahulEmp.id}`,
+        severity: 'CRITICAL',
       },
     ],
   });
 
-  console.log('Database successfully seeded with realistic NovaTech enterprise dataset!');
+  // 12. Audit Logs
+  await prisma.auditLog.createMany({
+    data: [
+      {
+        userName: 'Marcus Vance',
+        userRole: 'ADMIN',
+        action: 'LOGIN',
+        resourceType: 'SYSTEM',
+        detailsJson: JSON.stringify({ ip: '10.250.0.12', browser: 'Chrome Desktop' }),
+        createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+      },
+      {
+        userName: 'Rahul Sharma',
+        userRole: 'EMPLOYEE',
+        action: 'KNOWLEDGE_SUBMIT',
+        resourceType: 'KNOWLEDGE',
+        resourceId: pendingItem1.id,
+        detailsJson: JSON.stringify({ title: pendingItem1.title, status: 'PENDING_REVIEW' }),
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      },
+      {
+        userName: 'Sarah Lin',
+        userRole: 'MANAGER',
+        action: 'KNOWLEDGE_APPROVE',
+        resourceType: 'KNOWLEDGE',
+        resourceId: item1.id,
+        detailsJson: JSON.stringify({ title: item1.title, author: 'Rahul Sharma' }),
+        createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
+      },
+    ],
+  });
+
+  console.log('Database successfully seeded with enterprise RBAC hierarchy, demo users, and approval queues!');
 }
 
 main()

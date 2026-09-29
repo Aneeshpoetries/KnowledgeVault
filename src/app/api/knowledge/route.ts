@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateEmbedding } from '@/lib/ai/embeddings';
+import { getCurrentUser, logAudit } from '@/lib/auth';
+import { buildAccessibleKnowledgeWhere, hasPermission } from '@/lib/rbac';
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    const accessibleWhere = user
+      ? buildAccessibleKnowledgeWhere(user)
+      : { status: 'APPROVED', visibility: 'PUBLIC' };
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
     const type = searchParams.get('type');
@@ -13,29 +20,29 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status') || 'APPROVED';
     const freshness = searchParams.get('freshness');
 
-    const where: any = {};
+    const filterWhere: any = {};
 
     if (status !== 'ALL') {
-      where.status = status;
+      filterWhere.status = status;
     }
     if (type && type !== 'ALL') {
-      where.type = type;
+      filterWhere.type = type;
     }
     if (projectId && projectId !== 'ALL') {
-      where.projectId = projectId;
+      filterWhere.projectId = projectId;
     }
     if (employeeId && employeeId !== 'ALL') {
-      where.employeeId = employeeId;
+      filterWhere.employeeId = employeeId;
     }
     if (risk && risk !== 'ALL') {
-      where.risk = risk;
+      filterWhere.risk = risk;
     }
     if (freshness && freshness !== 'ALL') {
-      where.freshness = freshness;
+      filterWhere.freshness = freshness;
     }
 
     if (search.trim()) {
-      where.OR = [
+      filterWhere.OR = [
         { title: { contains: search } },
         { summary: { contains: search } },
         { content: { contains: search } },
@@ -44,7 +51,9 @@ export async function GET(req: NextRequest) {
     }
 
     const items = await prisma.knowledgeItem.findMany({
-      where,
+      where: {
+        AND: [accessibleWhere, filterWhere],
+      },
       include: {
         project: true,
         employee: true,
@@ -62,6 +71,18 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    if (!hasPermission(user, 'CREATE_KNOWLEDGE')) {
+      return NextResponse.json(
+        { error: 'You do not have permission to submit knowledge items' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const {
       title,
@@ -79,6 +100,7 @@ export async function POST(req: NextRequest) {
       problems,
       solutions,
       dependencies,
+      visibility,
     } = body;
 
     if (!title || !content || !type) {
@@ -87,6 +109,15 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Role-governed initial status:
+    // Admin / Manager can immediately publish (APPROVED), Employee submissions go to PENDING_REVIEW
+    const initialStatus =
+      user.role === 'ADMIN' || user.role === 'MANAGER'
+        ? body.status || 'APPROVED'
+        : 'PENDING_REVIEW';
+
+    const authorEmployeeId = user.employeeId || employeeId || null;
 
     // 1. Create KnowledgeItem
     const item = await prisma.knowledgeItem.create({
@@ -101,12 +132,15 @@ export async function POST(req: NextRequest) {
         risk: risk || 'MEDIUM',
         importance: Number(importance) || 7,
         confidence: Number(confidence) || 0.9,
-        status: 'APPROVED',
+        status: initialStatus,
         freshness: 'FRESH',
-        lastVerifiedAt: new Date(),
-        verifiedBy: 'Author Verification',
+        lastVerifiedAt: initialStatus === 'APPROVED' ? new Date() : null,
+        verifiedBy: initialStatus === 'APPROVED' ? user.name : null,
         projectId: projectId || null,
-        employeeId: employeeId || null,
+        employeeId: authorEmployeeId,
+        createdByEmployeeId: user.employeeId || null,
+        visibility: visibility || (user.role === 'ADMIN' ? 'PUBLIC' : 'TEAM'),
+        version: 1,
         tagsJson: JSON.stringify(tags || []),
         problemsJson: JSON.stringify(problems || []),
         solutionsJson: JSON.stringify(solutions || []),
@@ -146,12 +180,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (employeeId) {
+    if (authorEmployeeId) {
       await prisma.knowledgeRelationship.create({
         data: {
-          sourceEntityId: employeeId,
+          sourceEntityId: authorEmployeeId,
           sourceEntityType: 'EMPLOYEE',
-          sourceLabel: item.employee?.name || 'Employee',
+          sourceLabel: item.employee?.name || user.name || 'Employee',
           targetEntityId: item.id,
           targetEntityType: 'KNOWLEDGE',
           targetLabel: item.title,
@@ -161,18 +195,51 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4. Log Activity
+    // 4. If item is pending review, notify manager
+    if (initialStatus === 'PENDING_REVIEW') {
+      const targetManager = user.managerId
+        ? await prisma.employee.findUnique({ where: { id: user.managerId } })
+        : await prisma.employee.findFirst({ where: { role: 'Engineering Manager' } });
+
+      if (targetManager) {
+        await prisma.notification.create({
+          data: {
+            type: 'REVIEW_REQUESTED',
+            title: 'Knowledge Review Required',
+            message: `${user.name} submitted "${item.title}" for technical review.`,
+            link: '/reviews',
+            employeeId: targetManager.id,
+          },
+        });
+      }
+    }
+
+    // 5. Log Activity and Audit Log
     await prisma.activity.create({
       data: {
         type: 'EXTRACTION',
-        title: `New Knowledge Added: ${item.title}`,
-        description: `Manual knowledge capture of type ${item.type} (Risk: ${item.risk}).`,
-        employeeId: employeeId || null,
+        title: initialStatus === 'PENDING_REVIEW' ? `Knowledge Submitted for Review: ${item.title}` : `New Knowledge Added: ${item.title}`,
+        description: `Knowledge capture (${item.type}) by ${user.name} (${user.role}). Status: ${initialStatus}.`,
+        employeeId: authorEmployeeId,
         projectId: projectId || null,
       },
     });
 
-    return NextResponse.json({ success: true, item });
+    await logAudit(user, 'SUBMIT_KNOWLEDGE', 'KNOWLEDGE_ITEM', item.id, {
+      title: item.title,
+      status: initialStatus,
+      visibility: item.visibility,
+    });
+
+    return NextResponse.json({
+      success: true,
+      item,
+      pendingApproval: initialStatus === 'PENDING_REVIEW',
+      message:
+        initialStatus === 'PENDING_REVIEW'
+          ? 'Knowledge item submitted for manager approval and added to the review queue.'
+          : 'Knowledge item successfully published.',
+    });
   } catch (error) {
     console.error('Failed to create knowledge item:', error);
     return NextResponse.json({ error: 'Failed to create knowledge item' }, { status: 500 });

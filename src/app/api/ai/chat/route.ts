@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeRAGQuery } from '@/lib/ai/rag';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUser, logAudit } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,8 +12,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'A query string is required' }, { status: 400 });
     }
 
-    // Execute real RAG pipeline
-    const result = await executeRAGQuery(query.trim());
+    const user = await getCurrentUser();
+
+    // Execute real RAG pipeline with user context
+    const result = await executeRAGQuery(query.trim(), user);
+
+    if (result.answer.startsWith('Access Restricted:')) {
+      await logAudit(user, 'RESTRICTED_QUERY_ATTEMPTED', 'KNOWLEDGE_VAULT_AI', undefined, {
+        query: query.trim(),
+        role: user?.role,
+      });
+    } else {
+      await logAudit(user, 'AI_ASSISTANT_QUERY', 'KNOWLEDGE_VAULT_AI', undefined, {
+        query: query.trim(),
+        citationCount: result.citations.length,
+        isSufficientEvidence: result.isSufficientEvidence,
+      });
+    }
 
     // If a knowledge gap was detected, automatically log it as an open gap in the database
     if (result.knowledgeGapDetected && result.gapDetails) {

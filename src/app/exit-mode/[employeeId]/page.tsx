@@ -24,11 +24,14 @@ import {
 import { AppShell } from '@/components/layout/AppShell';
 import { CoverageRing } from '@/components/ui/CoverageRing';
 import { RiskBadge, ConfidenceBadge } from '@/components/ui/Badges';
+import { AccessForbidden } from '@/components/ui/AccessForbidden';
+import { useAuth } from '@/context/AuthContext';
 
 export default function EmployeeExitModeInterviewPage() {
   const params = useParams();
   const router = useRouter();
   const employeeId = params?.employeeId as string;
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [employee, setEmployee] = useState<any>(null);
@@ -39,6 +42,8 @@ export default function EmployeeExitModeInterviewPage() {
   const [recoveredItems, setRecoveredItems] = useState<any[]>([]);
   const [completedReport, setCompletedReport] = useState<any>(null);
   const [lastExtractedTitle, setLastExtractedTitle] = useState<string | null>(null);
+  const [isForbidden, setIsForbidden] = useState(false);
+  const [forbiddenMessage, setForbiddenMessage] = useState('');
 
   // High-fidelity realistic expert responses for 1-click evaluation
   const demoAnswers: Record<number, string> = {
@@ -67,6 +72,14 @@ export default function EmployeeExitModeInterviewPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ employeeId }),
         });
+
+        if (sessRes.status === 403) {
+          const errData = await sessRes.json();
+          setIsForbidden(true);
+          setForbiddenMessage(errData.error || 'You do not have permission to access this Exit Mode session.');
+          return;
+        }
+
         const sessData = await sessRes.json();
         setSession(sessData.session);
 
@@ -149,6 +162,17 @@ export default function EmployeeExitModeInterviewPage() {
         <div className="py-24 text-center text-vault-dim font-mono text-xs">
           Initializing knowledge recovery workspace...
         </div>
+      </AppShell>
+    );
+  }
+
+  if (isForbidden) {
+    return (
+      <AppShell>
+        <AccessForbidden
+          title="Exit Mode Session Restricted"
+          message={forbiddenMessage || 'This Exit Mode session is outside your workspace permissions.'}
+        />
       </AppShell>
     );
   }

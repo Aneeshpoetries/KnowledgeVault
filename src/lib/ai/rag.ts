@@ -2,13 +2,61 @@ import { prisma } from '../prisma';
 import { generateEmbedding, cosineSimilarity } from './embeddings';
 import { callLLM } from './llm-provider';
 import { ChatAnswerResponse, ChatMessageCitation, KnowledgeType, RiskLevel } from '../types';
+import { AuthUser, buildAccessibleKnowledgeWhere } from '../rbac';
+import { getCurrentUser } from '../auth';
 
-export async function executeRAGQuery(userQuery: string): Promise<ChatAnswerResponse> {
+export async function executeRAGQuery(
+  userQuery: string,
+  currentUser?: AuthUser | null
+): Promise<ChatAnswerResponse> {
+  const user = currentUser !== undefined ? currentUser : await getCurrentUser();
+  const lowerQuery = userQuery.toLowerCase();
+
+  // Detect out-of-scope / unauthorized queries for non-elevated roles
+  const isElevatedRole = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const isOrgWideQuery =
+    (lowerQuery.includes('org-wide') ||
+      lowerQuery.includes('across the company') ||
+      lowerQuery.includes('across the organization') ||
+      lowerQuery.includes('all single point') ||
+      lowerQuery.includes('all spof') ||
+      lowerQuery.includes('all single points of failure')) &&
+    !isElevatedRole;
+
+  const isRestrictedTopic =
+    (lowerQuery.includes('executive audit') ||
+      lowerQuery.includes('board audit') ||
+      lowerQuery.includes('architectural risk assessment') ||
+      lowerQuery.includes('compensation') ||
+      lowerQuery.includes('salary')) &&
+    user?.role !== 'ADMIN';
+
+  if (isOrgWideQuery || isRestrictedTopic) {
+    return {
+      answer: `Access Restricted: This information requires elevated permissions (${user?.role === 'EMPLOYEE' ? 'Manager or Administrator' : 'Administrator'}). Your current role (${user?.role || 'Guest'}) is scoped to your assigned team and projects.`,
+      why: 'Organizational risk assessments, executive audit records, and cross-departmental single-point-of-failure analyses are restricted by data governance policies.',
+      relevantContext:
+        'Access denied under KnowledgeVault RBAC policy. If you require this context for an active project or incident response, request access from your team manager or workspace administrator.',
+      confidence: 0.0,
+      isSufficientEvidence: false,
+      knowledgeGapDetected: false,
+      citations: [],
+      relatedKnowledge: [],
+    };
+  }
+
   // 1. Generate embedding for user query
   const queryEmbedding = await generateEmbedding(userQuery);
 
-  // 2. Fetch stored embeddings and knowledge items
+  // 2. Fetch stored embeddings and knowledge items with strict RBAC data-level scoping
+  const accessibleWhere = user
+    ? buildAccessibleKnowledgeWhere(user)
+    : { status: 'APPROVED', visibility: 'PUBLIC' };
+
   const storedEmbeddings = await prisma.knowledgeEmbedding.findMany({
+    where: {
+      knowledgeItem: accessibleWhere,
+    },
     include: {
       knowledgeItem: {
         include: {
@@ -37,10 +85,10 @@ export async function executeRAGQuery(userQuery: string): Promise<ChatAnswerResp
     }
   }
 
-  // Also include keyword search matching for robust hybrid retrieval
+  // Also include keyword search matching over authorized items only
   const queryWords = userQuery.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
   const allKnowledgeItems = await prisma.knowledgeItem.findMany({
-    where: { status: 'APPROVED' },
+    where: accessibleWhere,
     include: {
       project: true,
       source: true,

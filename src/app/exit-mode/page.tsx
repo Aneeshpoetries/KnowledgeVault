@@ -14,8 +14,11 @@ import {
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { AccessForbidden } from '@/components/ui/AccessForbidden';
 
 export default function ExitModeHubPage() {
+  const { user } = useAuth();
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,6 +29,25 @@ export default function ExitModeHubPage() {
       .catch((err) => console.error('Failed to load employees:', err))
       .finally(() => setLoading(false));
   }, []);
+
+  if (user?.role === 'NEW_EMPLOYEE') {
+    return (
+      <AppShell>
+        <AccessForbidden
+          title="Exit Mode Restricted"
+          message="New employees cannot initiate or access exit mode knowledge recovery."
+          requiredRole="Employee, Manager, or Administrator"
+        />
+      </AppShell>
+    );
+  }
+
+  const filteredEmployees =
+    user?.role === 'MANAGER'
+      ? employees.filter((e) => user.directReportIds?.includes(e.id) || e.id === user.employeeId)
+      : user?.role === 'EMPLOYEE'
+      ? employees.filter((e) => e.id === user.employeeId)
+      : employees;
 
   const rahul = employees.find((e) => e.name.includes('Rahul')) || employees[0];
 
@@ -121,7 +143,7 @@ export default function ExitModeHubPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-vault-border/40">
-                  {employees.map((emp) => (
+                  {filteredEmployees.map((emp) => (
                     <tr key={emp.id} className="vault-hover-row">
                       <td className="py-3 px-4">
                         <Link
