@@ -48,7 +48,9 @@ export async function GET(req: NextRequest) {
       orderBy: [{ impact: 'desc' }, { detectedAt: 'desc' }],
     });
 
-    return NextResponse.json({ gaps });
+    return NextResponse.json({ gaps }, {
+      headers: { 'Cache-Control': 'private, max-age=15, stale-while-revalidate=30' },
+    });
   } catch (error) {
     console.error('Failed to fetch knowledge gaps:', error);
     return NextResponse.json({ error: 'Failed to retrieve knowledge gaps' }, { status: 500 });

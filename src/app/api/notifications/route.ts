@@ -9,7 +9,9 @@ export async function GET() {
     });
     const unreadCount = notifications.filter((n) => !n.read).length;
 
-    return NextResponse.json({ notifications, unreadCount });
+    return NextResponse.json({ notifications, unreadCount }, {
+      headers: { 'Cache-Control': 'private, max-age=10, stale-while-revalidate=30' },
+    });
   } catch (error) {
     console.error('Failed to get notifications:', error);
     return NextResponse.json({ error: 'Failed to retrieve notifications' }, { status: 500 });

@@ -62,7 +62,9 @@ export async function GET(req: NextRequest) {
       orderBy: [{ importance: 'desc' }, { createdAt: 'desc' }],
     });
 
-    return NextResponse.json({ items });
+    return NextResponse.json({ items }, {
+      headers: { 'Cache-Control': 'private, max-age=15, stale-while-revalidate=45' },
+    });
   } catch (error) {
     console.error('Failed to fetch knowledge items:', error);
     return NextResponse.json({ error: 'Failed to retrieve knowledge base' }, { status: 500 });

@@ -54,6 +54,16 @@ export function verifySessionToken(token: string): { userId: string; email: stri
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
+  // Try MongoDB first (primary auth system)
+  try {
+    const { getMongoCurrentUser } = await import('./mongo-auth');
+    const mongoUser = await getMongoCurrentUser();
+    if (mongoUser) return mongoUser;
+  } catch {
+    // MongoDB unavailable — fall through to Prisma fallback
+  }
+
+  // Fallback: legacy Prisma/SQLite auth (backward compat during migration)
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
@@ -72,9 +82,9 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       targetEmail = legacyEmail;
     }
 
-    // Default to Marcus Vance (Admin) if no session exists yet for smooth initial exploration
+    // No valid session — not authenticated
     if (!targetEmail && !targetUserId) {
-      targetEmail = 'marcus@novatech.demo';
+      return null;
     }
 
     const user = await prisma.user.findFirst({
@@ -114,6 +124,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     return null;
   }
 }
+
 
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getCurrentUser();

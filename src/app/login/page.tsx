@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ShieldCheck,
-  Briefcase,
   UserCheck,
   Sparkles,
   ArrowRight,
@@ -15,8 +14,6 @@ import {
   KeyRound,
   CheckCircle2,
   AlertCircle,
-  Building2,
-  Terminal,
 } from 'lucide-react';
 import { DEMO_PROFILES } from '@/lib/demo-users';
 import { UserRole } from '@/lib/types';
@@ -25,8 +22,10 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, register, error: authError } = useAuth();
 
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('demo123');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,21 +35,15 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setError('Please enter your work email.');
-      return;
-    }
+    if (mode === 'register' && !name.trim()) { setError('Please enter your full name.'); return; }
+    if (!email.trim()) { setError('Please enter your work email.'); return; }
     setLoading(true);
     setError(null);
-
-    const success = await login(email.trim(), password);
+    let success = false;
+    if (mode === 'login') success = await login(email.trim(), password);
+    else success = await register(name.trim(), email.trim(), password);
     setLoading(false);
-    if (success) {
-      router.push('/dashboard');
-      router.refresh();
-    } else {
-      setError('Authentication failed. Verify your email or password (demo password: "demo123").');
-    }
+    if (!success) setError(authError || (mode === 'login' ? 'Authentication failed. Verify your email or password.' : 'Registration failed. Please try again.'));
   };
 
   const handleSelectRole = async (role: UserRole) => {
@@ -63,16 +56,10 @@ export default function LoginPage() {
         body: JSON.stringify({ role }),
       });
       const data = await res.json();
-      if (res.ok) {
-        window.location.href = '/dashboard';
-      } else {
-        setError(data.error || 'Authentication failed');
-      }
-    } catch {
-      setError('Network error during authentication');
-    } finally {
-      setLoadingRole(null);
-    }
+      if (res.ok) window.location.href = '/dashboard';
+      else setError(data.error || 'Authentication failed');
+    } catch { setError('Network error during authentication'); }
+    finally { setLoadingRole(null); }
   };
 
   const fillCredentials = (demoEmail: string) => {
@@ -81,241 +68,276 @@ export default function LoginPage() {
     setError(null);
   };
 
-  return (
-    <div className="min-h-screen bg-vault-dark text-vault-text flex selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* Left side: Enterprise Brand & Philosophy Showcase */}
-      <div className="hidden lg:flex lg:w-1/2 bg-vault-surface/40 border-r border-vault-border/80 flex-col justify-between p-12 relative overflow-hidden">
-        {/* Subtle background glow */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
+  const roleCardColor = (role: UserRole) => {
+    switch (role) {
+      case 'ADMIN':        return 'bg-[#FCA8CA]/20 border-[#FCA8CA]/50 hover:border-[#FCA8CA]';
+      case 'MANAGER':      return 'bg-[#A0C4F6]/20 border-[#A0C4F6]/50 hover:border-[#A0C4F6]';
+      case 'EMPLOYEE':     return 'bg-[#C8A2F9]/20 border-[#C8A2F9]/50 hover:border-[#C8A2F9]';
+      case 'NEW_EMPLOYEE': return 'bg-[#F8BFA5]/20 border-[#F8BFA5]/50 hover:border-[#F8BFA5]';
+    }
+  };
 
-        {/* Top Logo */}
+  const roleAvatarColor = (role: UserRole) => {
+    switch (role) {
+      case 'ADMIN':        return 'bg-[#FCA8CA]';
+      case 'MANAGER':      return 'bg-[#A0C4F6]';
+      case 'EMPLOYEE':     return 'bg-[#C8A2F9]';
+      case 'NEW_EMPLOYEE': return 'bg-[#F8BFA5]';
+    }
+  };
+
+  const roleBadgeClass = (role: UserRole) => {
+    switch (role) {
+      case 'ADMIN':        return 'badge-role-admin';
+      case 'MANAGER':      return 'badge-role-manager';
+      case 'EMPLOYEE':     return 'badge-role-emp';
+      case 'NEW_EMPLOYEE': return 'badge-role-new';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-vault-bg text-vault-text flex selection:bg-[#C8A2F9]/30">
+      {/* Left side: Brand showcase */}
+      <div className="hidden lg:flex lg:w-1/2 bg-vault-surface border-r border-vault-border flex-col justify-between p-12 relative overflow-hidden">
+        {/* Warm decorative blobs */}
+        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#F8D4A7]/40 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-[#C8A2F9]/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 right-1/3 w-56 h-56 bg-[#F391AC]/20 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Logo */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+          <div className="w-10 h-10 rounded-2xl bg-vault-text flex items-center justify-center text-vault-dark shadow-card">
             <KnowledgeVaultLogo size={20} />
           </div>
           <div>
-            <span className="font-semibold text-sm tracking-tight text-vault-text block">
-              KnowledgeVault AI
-            </span>
-            <span className="text-[11px] text-vault-dim font-mono">
-              Enterprise Knowledge Continuity Engine
-            </span>
+            <span className="font-bold text-[15px] tracking-tight text-vault-text block">KnowledgeVault AI</span>
+            <span className="text-[11px] text-vault-dim">Enterprise Knowledge Continuity Engine</span>
           </div>
         </div>
 
-        {/* Center Philosophy Message */}
+        {/* Center Message */}
         <div className="relative z-10 max-w-lg space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-mono">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#C8A2F9]/20 border border-[#C8A2F9]/40 text-[#7C6AF7] text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Role-Based Access Control Active</span>
           </div>
 
-          <h2 className="text-3xl font-semibold tracking-tight text-vault-text leading-tight">
+          <h2 className="text-3xl font-bold tracking-tight text-vault-text leading-tight">
             Turn employee experience into a living, searchable organizational memory.
           </h2>
 
-          <p className="text-sm text-vault-muted leading-relaxed">
+          <p className="text-[14px] text-vault-muted leading-relaxed">
             Eliminate single points of failure before engineers depart. Granular data-level
-            governance ensures staff view project context while executive risk assessments and audit
-            logs remain strictly isolated.
+            governance ensures staff view project context while executive risk assessments remain isolated.
           </p>
 
-          <div className="grid grid-cols-2 gap-3 pt-4">
-            <div className="p-3.5 rounded-lg bg-vault-dark/60 border border-vault-border/60">
-              <span className="text-[10px] font-mono text-vault-dim uppercase tracking-wider block">
-                Security Model
-              </span>
-              <span className="text-xs font-medium text-vault-text mt-1 block">
-                Server-Enforced RBAC
-              </span>
-              <p className="text-[11px] text-vault-dim mt-0.5">
-                Unauthorized data never enters vector retrieval or LLM prompts.
-              </p>
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="p-4 rounded-3xl bg-[#F8D4A7]/30 border border-[#F8D4A7]/60">
+              <span className="text-[10px] font-bold text-vault-dim uppercase tracking-wider block mb-1">Security Model</span>
+              <span className="text-[13px] font-bold text-vault-text block">Server-Enforced RBAC</span>
+              <p className="text-[11px] text-vault-muted mt-1">Unauthorized data never enters vector retrieval or LLM prompts.</p>
             </div>
-            <div className="p-3.5 rounded-lg bg-vault-dark/60 border border-vault-border/60">
-              <span className="text-[10px] font-mono text-vault-dim uppercase tracking-wider block">
-                Exit Mode Engine
-              </span>
-              <span className="text-xs font-medium text-vault-text mt-1 block">
-                Targeted AI Interviews
-              </span>
-              <p className="text-[11px] text-vault-dim mt-0.5">
-                Codifies tacit heuristics into permanent institutional memory.
-              </p>
+            <div className="p-4 rounded-3xl bg-[#C8A2F9]/20 border border-[#C8A2F9]/40">
+              <span className="text-[10px] font-bold text-vault-dim uppercase tracking-wider block mb-1">Exit Mode Engine</span>
+              <span className="text-[13px] font-bold text-vault-text block">Targeted AI Interviews</span>
+              <p className="text-[11px] text-vault-muted mt-1">Codifies tacit heuristics into permanent institutional memory.</p>
             </div>
           </div>
         </div>
 
         {/* Footer Badges */}
-        <div className="flex items-center gap-6 text-[11px] text-vault-dim font-mono relative z-10">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> SOC2 Type II Certified
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5 text-indigo-400" /> AES-256 + HMAC SHA-256
-          </span>
-          <span className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" /> Audit Logged
-          </span>
+        <div className="flex items-center gap-6 text-[11px] text-vault-dim font-medium relative z-10">
+          <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" /> SOC2 Type II</span>
+          <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-[#C8A2F9]" /> AES-256 Encrypted</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#A0C4F6]" /> Audit Logged</span>
         </div>
       </div>
 
-      {/* Right side: Login Form & Demo Persona Selector */}
+      {/* Right side: Login Form */}
       <div className="flex-1 flex flex-col justify-center p-6 sm:p-12 max-w-xl mx-auto w-full">
         <div className="space-y-6">
-          {/* Header */}
-          <div className="space-y-2">
-            <div className="lg:hidden flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                <KnowledgeVaultLogo size={16} />
-              </div>
-              <span className="font-semibold text-xs text-vault-text">KnowledgeVault AI</span>
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 rounded-2xl bg-vault-text flex items-center justify-center text-vault-dark">
+              <KnowledgeVaultLogo size={18} />
             </div>
-            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-vault-text">
-              Sign in to NovaTech Workspace
+            <span className="font-bold text-[14px] text-vault-text">KnowledgeVault AI</span>
+          </div>
+
+          {/* Header */}
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-vault-text">
+              {mode === 'login' ? 'Welcome back 👋' : 'Join NovaTech Workspace'}
             </h1>
-            <p className="text-xs text-vault-muted">
-              Enter your corporate credentials or select a verified demo persona below.
+            <p className="text-[13px] text-vault-muted mt-1">
+              {mode === 'login'
+                ? 'Sign in with your credentials or pick a demo persona below.'
+                : 'Create an account to join the workspace.'}
             </p>
           </div>
 
+          {/* Mode Toggle */}
+          <div className="flex p-1 bg-vault-subtle rounded-2xl border border-vault-border">
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setError(null); }}
+              className={`flex-1 py-2 text-[13px] font-semibold rounded-xl transition-all ${
+                mode === 'login' ? 'bg-vault-surface text-vault-text shadow-card' : 'text-vault-muted hover:text-vault-text'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('register'); setError(null); }}
+              className={`flex-1 py-2 text-[13px] font-semibold rounded-xl transition-all ${
+                mode === 'register' ? 'bg-vault-surface text-vault-text shadow-card' : 'text-vault-muted hover:text-vault-text'
+              }`}
+            >
+              Create Account
+            </button>
+          </div>
+
+          {/* Error */}
           {error && (
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+            <div className="p-3.5 rounded-2xl bg-[#F391AC]/15 border border-[#F391AC]/40 text-[#8b0a30] text-[12px] flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#F391AC]" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'register' && (
+              <div>
+                <label className="text-[12px] font-semibold text-vault-muted block mb-2">Full Name</label>
+                <div className="relative">
+                  <UserCheck className="w-4 h-4 absolute left-3.5 top-3 text-vault-dim" />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    className="vault-input pl-10"
+                  />
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="text-xs font-medium text-vault-muted block mb-1.5">
-                Corporate Email
-              </label>
+              <label className="text-[12px] font-semibold text-vault-muted block mb-2">Corporate Email</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-2.5 text-vault-dim" />
+                <Mail className="w-4 h-4 absolute left-3.5 top-3 text-vault-dim" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@novatech.demo"
-                  className="w-full bg-vault-surface border border-vault-border rounded-lg pl-9 pr-3 py-2 text-xs text-vault-text placeholder:text-vault-dim focus:outline-none focus:border-indigo-500/80 transition-colors"
+                  className="vault-input pl-10"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-vault-muted block mb-1.5">Password</label>
+              <label className="text-[12px] font-semibold text-vault-muted block mb-2">Password</label>
               <div className="relative">
-                <KeyRound className="w-4 h-4 absolute left-3 top-2.5 text-vault-dim" />
+                <KeyRound className="w-4 h-4 absolute left-3.5 top-3 text-vault-dim" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full bg-vault-surface border border-vault-border rounded-lg pl-9 pr-9 py-2 text-xs text-vault-text placeholder:text-vault-dim focus:outline-none focus:border-indigo-500/80 transition-colors font-mono"
+                  className="vault-input pl-10 pr-10 font-mono"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-vault-dim hover:text-vault-text"
+                  className="absolute right-3.5 top-3 text-vault-dim hover:text-vault-text"
                 >
-                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
+            {mode === 'login' && (
+              <div className="flex justify-end">
+                <a href="/forgot-password" className="text-[12px] text-vault-muted hover:text-vault-text transition-colors">
+                  Forgot password?
+                </a>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
+              className="btn-primary w-full py-3 rounded-2xl disabled:opacity-50"
             >
-              {loading ? 'Authenticating...' : 'Sign In with Credentials'}
-              <ArrowRight className="w-3.5 h-3.5" />
+              {loading
+                ? (mode === 'login' ? 'Authenticating...' : 'Creating Account...')
+                : (mode === 'login' ? 'Sign In' : 'Create Account')}
+              <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
           {/* Divider */}
-          <div className="relative my-4">
+          <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-vault-border" />
             </div>
-            <div className="relative flex justify-center text-[10px] uppercase font-mono tracking-wider">
-              <span className="bg-vault-dark px-2 text-vault-dim">Or Select Demo Persona</span>
+            <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-wider">
+              <span className="bg-vault-bg px-3 text-vault-dim">Or select a demo persona</span>
             </div>
           </div>
 
-          {/* Demo Personas 4 Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* Demo Persona Cards */}
+          <div className="grid grid-cols-2 gap-3">
             {DEMO_PROFILES.map((profile) => {
-              const isSelectedLoading = loadingRole === profile.role;
-              const roleBadgeColor =
-                profile.role === 'ADMIN'
-                  ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
-                  : profile.role === 'MANAGER'
-                  ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
-                  : profile.role === 'EMPLOYEE'
-                  ? 'text-sky-400 bg-sky-500/10 border-sky-500/30'
-                  : 'text-purple-400 bg-purple-500/10 border-purple-500/30';
-
+              const isLoading = loadingRole === profile.role;
               return (
                 <div
                   key={profile.role}
-                  className="p-3 rounded-xl bg-vault-surface border border-vault-border hover:border-vault-border/90 hover:bg-vault-subtle/50 transition-all flex flex-col justify-between space-y-2 group"
+                  className={`p-3.5 rounded-3xl border-2 transition-all group cursor-pointer ${roleCardColor(profile.role)}`}
+                  onClick={() => handleSelectRole(profile.role)}
                 >
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span
-                        className={`text-[9px] font-mono px-1.5 py-0.2 rounded border uppercase tracking-wider ${roleBadgeColor}`}
-                      >
-                        {profile.role.replace('_', ' ')}
-                      </span>
-                      {profile.name.includes('Rahul') && (
-                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                          EXIT PENDING
-                        </span>
-                      )}
-                      {profile.name.includes('Alex') && (
-                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                          NEW HIRE
-                        </span>
-                      )}
+                  <div className="flex items-start gap-2.5 mb-3">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${roleAvatarColor(profile.role)}`}>
+                      {profile.name.slice(0, 2).toUpperCase()}
                     </div>
-
-                    <h3 className="text-xs font-semibold text-vault-text group-hover:text-indigo-400 transition-colors">
-                      {profile.name}
-                    </h3>
-                    <p className="text-[11px] text-vault-dim truncate">{profile.title}</p>
-                    <p className="text-[10px] font-mono text-vault-dim/80 mt-0.5">{profile.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-[12px] font-bold text-vault-text truncate">{profile.name}</h3>
+                      <p className="text-[10px] text-vault-dim truncate mt-0.5">{profile.title}</p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 pt-2 border-t border-vault-border/60">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectRole(profile.role)}
-                      disabled={isSelectedLoading}
-                      className="flex-1 py-1 px-2 rounded-md bg-vault-dark hover:bg-indigo-600 hover:text-white border border-vault-border text-[11px] font-medium text-vault-muted transition-all text-center"
-                    >
-                      {isSelectedLoading ? 'Connecting...' : '1-Click Login'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => fillCredentials(profile.email)}
-                      className="py-1 px-2 rounded-md bg-vault-subtle hover:bg-vault-border text-[10px] text-vault-dim hover:text-vault-text transition-colors"
-                      title="Fill into email form"
-                    >
-                      Use
-                    </button>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${roleBadgeClass(profile.role)}`}>
+                      {profile.role.replace('_', ' ')}
+                    </span>
+                    {profile.name.includes('Rahul') && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#F8BFA5]/40 text-[#7a3010]">EXIT</span>
+                    )}
+                    {profile.name.includes('Alex') && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#C8A2F9]/30 text-[#4a1a8b]">NEW</span>
+                    )}
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleSelectRole(profile.role); }}
+                    disabled={isLoading}
+                    className="mt-3 w-full py-1.5 px-3 rounded-2xl bg-vault-surface text-[11px] font-bold text-vault-text border border-vault-border hover:bg-vault-text hover:text-vault-dark transition-all text-center disabled:opacity-50"
+                  >
+                    {isLoading ? 'Connecting...' : '1-Click Login →'}
+                  </button>
                 </div>
               );
             })}
           </div>
 
-          <div className="p-3 rounded-lg bg-vault-surface/60 border border-vault-border/60 flex items-center justify-between text-[11px] text-vault-dim">
-            <span>Universal Demo Password:</span>
-            <code className="font-mono text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">
+          {/* Demo Password Hint */}
+          <div className="p-3.5 rounded-2xl bg-vault-surface border border-vault-border flex items-center justify-between">
+            <span className="text-[12px] text-vault-muted font-medium">Universal Demo Password:</span>
+            <code className="font-mono text-[13px] font-bold text-[#7C6AF7] bg-[#C8A2F9]/15 px-2.5 py-1 rounded-xl border border-[#C8A2F9]/30">
               demo123
             </code>
           </div>

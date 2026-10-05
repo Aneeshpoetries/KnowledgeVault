@@ -21,7 +21,6 @@ import {
   CheckSquare,
   PlusCircle,
   BookOpen,
-  ShieldCheck,
 } from 'lucide-react';
 import { KnowledgeVaultLogo } from '../ui/KnowledgeVaultLogo';
 import { useAuth } from '@/context/AuthContext';
@@ -43,33 +42,24 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
   const role: UserRole = (authUser?.role || propRole || 'ADMIN') as UserRole;
   const name = authUser?.name || propName || 'User';
 
-  // Fetch pending reviews count for Admin and Manager
   useEffect(() => {
     if (role === 'ADMIN' || role === 'MANAGER') {
       fetch('/api/reviews')
         .then((res) => res.json())
         .then((data) => {
-          if (Array.isArray(data.items)) {
-            setPendingReviewCount(data.items.length);
-          }
+          if (Array.isArray(data.items)) setPendingReviewCount(data.items.length);
         })
         .catch(() => {});
     }
   }, [role]);
 
-  // Role-specific navigation items
   const getNavSections = () => {
     if (role === 'ADMIN') {
       return {
         primary: [
           { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
           { label: 'Knowledge Base', href: '/knowledge', icon: Brain },
-          {
-            label: 'Review Queue',
-            href: '/reviews',
-            icon: CheckSquare,
-            badge: pendingReviewCount > 0 ? String(pendingReviewCount) : undefined,
-          },
+          { label: 'Review Queue', href: '/reviews', icon: CheckSquare, badge: pendingReviewCount > 0 ? String(pendingReviewCount) : undefined },
           { label: 'Continuity AI', href: '/assistant', icon: Bot, isAi: true },
           { label: 'Knowledge Graph', href: '/graph', icon: Network },
           { label: 'Risk & Coverage', href: '/coverage', icon: PieChart },
@@ -84,18 +74,12 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
         ],
       };
     }
-
     if (role === 'MANAGER') {
       return {
         primary: [
           { label: 'Team Overview', href: '/dashboard', icon: LayoutDashboard },
           { label: 'Knowledge Base', href: '/knowledge', icon: Brain },
-          {
-            label: 'Review Queue',
-            href: '/reviews',
-            icon: CheckSquare,
-            badge: pendingReviewCount > 0 ? String(pendingReviewCount) : undefined,
-          },
+          { label: 'Review Queue', href: '/reviews', icon: CheckSquare, badge: pendingReviewCount > 0 ? String(pendingReviewCount) : undefined },
           { label: 'Continuity AI', href: '/assistant', icon: Bot, isAi: true },
           { label: 'Team Graph', href: '/graph', icon: Network },
           { label: 'Team Coverage', href: '/coverage', icon: PieChart },
@@ -109,7 +93,6 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
         ],
       };
     }
-
     if (role === 'EMPLOYEE') {
       return {
         primary: [
@@ -127,8 +110,6 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
         ],
       };
     }
-
-    // NEW_EMPLOYEE
     return {
       primary: [
         { label: 'Getting Started', href: '/dashboard', icon: LayoutDashboard },
@@ -150,9 +131,7 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
     setResetting(true);
     try {
       const res = await fetch('/api/reset-demo', { method: 'POST' });
-      if (res.ok) {
-        window.location.reload();
-      }
+      if (res.ok) window.location.reload();
     } catch {
       alert('Failed to reset demo data');
     } finally {
@@ -160,40 +139,45 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
     }
   };
 
-  const getRoleBadgeStyle = (r: UserRole) => {
+  const getRoleBadgeClass = (r: UserRole) => {
     switch (r) {
-      case 'ADMIN':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-      case 'MANAGER':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      case 'EMPLOYEE':
-        return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-      case 'NEW_EMPLOYEE':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      default:
-        return 'bg-vault-subtle text-vault-muted border-vault-border';
+      case 'ADMIN':       return 'badge-role-admin';
+      case 'MANAGER':     return 'badge-role-manager';
+      case 'EMPLOYEE':    return 'badge-role-emp';
+      case 'NEW_EMPLOYEE':return 'badge-role-new';
+      default:            return 'badge-role-emp';
+    }
+  };
+
+  const getRoleAccentColor = (r: UserRole) => {
+    switch (r) {
+      case 'ADMIN':       return 'bg-[#FCA8CA]';
+      case 'MANAGER':     return 'bg-[#A0C4F6]';
+      case 'EMPLOYEE':    return 'bg-[#C8A2F9]';
+      case 'NEW_EMPLOYEE':return 'bg-[#F8BFA5]';
+      default:            return 'bg-[#C8A2F9]';
     }
   };
 
   return (
     <aside
-      className={`hidden md:flex flex-col justify-between h-screen border-r border-vault-border bg-vault-surface transition-all duration-200 z-30 select-none ${
-        collapsed ? 'w-16' : 'w-56'
+      className={`hidden md:flex flex-col justify-between h-screen border-r border-vault-border bg-vault-surface transition-all duration-200 z-30 select-none shadow-card ${
+        collapsed ? 'w-[68px]' : 'w-[220px]'
       }`}
     >
-      {/* Top Header & Brand */}
+      {/* Brand Header */}
       <div>
-        <div className="flex items-center justify-between px-3.5 py-4 border-b border-vault-border/60">
-          <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center shrink-0 text-indigo-400">
+        <div className="flex items-center justify-between px-4 py-5 border-b border-vault-border">
+          <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden min-w-0">
+            <div className="w-8 h-8 rounded-2xl bg-vault-text flex items-center justify-center shrink-0 text-vault-dark shadow-sm">
               <KnowledgeVaultLogo size={16} />
             </div>
             {!collapsed && (
-              <div className="flex flex-col leading-none">
-                <span className="font-semibold text-xs tracking-tight text-vault-text">
+              <div className="flex flex-col leading-none min-w-0">
+                <span className="font-bold text-[13px] tracking-tight text-vault-text truncate">
                   KnowledgeVault
                 </span>
-                <span className="text-[10px] text-vault-dim mt-0.5 font-mono">
+                <span className="text-[10px] text-vault-dim mt-0.5">
                   Continuity Engine
                 </span>
               </div>
@@ -201,16 +185,15 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
           </Link>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-md text-vault-dim hover:text-vault-text hover:bg-vault-border/50 transition-colors"
+            className="p-1.5 rounded-xl text-vault-dim hover:text-vault-text hover:bg-vault-subtle transition-colors shrink-0"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            aria-label="Toggle sidebar"
           >
             {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
           </button>
         </div>
 
         {/* Primary Navigation */}
-        <nav className="p-2 space-y-0.5 mt-2">
+        <nav className="p-3 space-y-0.5 mt-1">
           {primary.map((item: any) => {
             const Icon = item.icon;
             const isActive =
@@ -221,41 +204,26 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all group ${
-                  isActive
-                    ? 'text-vault-text bg-vault-border/60'
-                    : 'text-vault-muted hover:text-vault-text hover:bg-vault-subtle/50'
-                }`}
+                className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
                 title={collapsed ? item.label : undefined}
               >
-                {isActive && (
-                  <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-full bg-indigo-500" />
-                )}
-
                 <Icon
                   className={`w-4 h-4 shrink-0 transition-colors ${
-                    isActive
-                      ? item.isAi
-                        ? 'text-indigo-400'
-                        : 'text-vault-text'
-                      : 'text-vault-dim group-hover:text-vault-text'
+                    isActive ? 'text-vault-text' : 'text-vault-dim'
                   }`}
                 />
-
-                {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                {!collapsed && <span className="flex-1 truncate text-[13px]">{item.label}</span>}
 
                 {!collapsed && item.badge && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#F8D4A7] text-[#7a5510]">
                     {item.badge}
                   </span>
                 )}
-
                 {!collapsed && item.hasDot && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F8BFA5] shrink-0" />
                 )}
-
                 {!collapsed && item.isAi && (
-                  <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#C8A2F9]/20 text-[#7C6AF7]">
                     AI
                   </span>
                 )}
@@ -263,57 +231,42 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
             );
           })}
 
-          {/* Section: Workspace / Governance */}
-          <div className="pt-3 pb-1 px-2.5">
+          {/* Section Divider */}
+          <div className="pt-4 pb-1 px-3">
             {!collapsed ? (
-              <span className="text-[10px] font-mono uppercase tracking-wider text-vault-dim">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-vault-dim">
                 {workspaceTitle}
               </span>
             ) : (
-              <div className="h-[1px] bg-vault-border/60 my-1" />
+              <div className="h-[1px] bg-vault-border" />
             )}
           </div>
 
           {workspace.map((item: any) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all group ${
-                  isActive
-                    ? item.isAccent
-                      ? 'text-amber-300 bg-amber-500/10 border border-amber-500/20'
-                      : 'text-vault-text bg-vault-border/60'
-                    : item.isAccent
-                    ? 'text-vault-muted hover:text-amber-300 hover:bg-vault-subtle/50'
-                    : 'text-vault-muted hover:text-vault-text hover:bg-vault-subtle/50'
+                className={`sidebar-nav-item ${isActive ? 'active' : ''} ${
+                  item.isAccent && !isActive ? 'hover:text-[#F391AC]' : ''
                 }`}
                 title={collapsed ? item.label : undefined}
               >
-                {isActive && (
-                  <span
-                    className={`absolute left-0 top-1 bottom-1 w-[2px] rounded-full ${
-                      item.isAccent ? 'bg-amber-400' : 'bg-emerald-500'
-                    }`}
-                  />
-                )}
                 <Icon
-                  className={`w-4 h-4 shrink-0 transition-colors ${
-                    isActive
-                      ? item.isAccent
-                        ? 'text-amber-400'
-                        : 'text-vault-text'
-                      : item.isAccent
-                      ? 'text-vault-dim group-hover:text-amber-400'
-                      : 'text-vault-dim group-hover:text-vault-text'
+                  className={`w-4 h-4 shrink-0 ${
+                    item.isAccent
+                      ? isActive ? 'text-[#F391AC]' : 'text-vault-dim group-hover:text-[#F391AC]'
+                      : isActive ? 'text-vault-text' : 'text-vault-dim'
                   }`}
                 />
-                {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                {!collapsed && <span className="flex-1 truncate text-[13px]">{item.label}</span>}
                 {!collapsed && item.isAccent && role !== 'NEW_EMPLOYEE' && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F391AC] animate-pulse shrink-0" />
                 )}
               </Link>
             );
@@ -321,19 +274,15 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
         </nav>
       </div>
 
-      {/* Bottom controls: Settings, Reset Demo, User Persona */}
-      <div className="p-2 border-t border-vault-border/60 space-y-0.5">
+      {/* Bottom: Settings + User */}
+      <div className="p-3 border-t border-vault-border space-y-1">
         <Link
           href="/settings"
-          className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-            pathname === '/settings'
-              ? 'text-vault-text bg-vault-border/60'
-              : 'text-vault-muted hover:text-vault-text hover:bg-vault-subtle/50'
-          }`}
+          className={`sidebar-nav-item ${pathname === '/settings' ? 'active' : ''}`}
           title={collapsed ? 'Settings' : undefined}
         >
           <Settings className="w-4 h-4 shrink-0 text-vault-dim" />
-          {!collapsed && <span className="flex-1 truncate">Settings</span>}
+          {!collapsed && <span className="flex-1 truncate text-[13px]">Settings</span>}
         </Link>
 
         {role === 'ADMIN' && (
@@ -341,40 +290,28 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
             type="button"
             onClick={handleResetDemo}
             disabled={resetting}
-            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-vault-dim hover:text-vault-text hover:bg-vault-subtle/50 transition-colors text-left"
+            className="sidebar-nav-item w-full text-left"
             title={collapsed ? 'Reset Demo Data' : undefined}
           >
-            <RotateCcw className={`w-4 h-4 shrink-0 ${resetting ? 'animate-spin' : ''}`} />
-            {!collapsed && <span className="flex-1 truncate">{resetting ? 'Resetting...' : 'Reset Demo'}</span>}
+            <RotateCcw className={`w-4 h-4 shrink-0 text-vault-dim ${resetting ? 'animate-spin' : ''}`} />
+            {!collapsed && (
+              <span className="flex-1 truncate text-[13px]">{resetting ? 'Resetting...' : 'Reset Demo'}</span>
+            )}
           </button>
         )}
 
-        {/* User Persona & Role Card */}
+        {/* User Card */}
         <div className="pt-2">
-          <div
-            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md bg-vault-dark/40 border border-vault-border/40"
-            title={`${name} (${role})`}
-          >
-            <div className="w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-[10px] font-semibold text-indigo-300 shrink-0">
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-2xl bg-vault-subtle border border-vault-border">
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${getRoleAccentColor(role)}`}>
               {name.slice(0, 2).toUpperCase()}
             </div>
             {!collapsed && (
               <div className="flex flex-col min-w-0 flex-1 leading-none">
-                <span className="text-xs font-medium text-vault-text truncate">{name}</span>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span
-                    className={`text-[9px] font-mono px-1 py-0.2 rounded border uppercase tracking-wider ${getRoleBadgeStyle(
-                      role
-                    )}`}
-                  >
-                    {role.replace('_', ' ')}
-                  </span>
-                  {name.includes('Rahul') && (
-                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      EXIT PENDING
-                    </span>
-                  )}
-                </div>
+                <span className="text-[12px] font-semibold text-vault-text truncate">{name}</span>
+                <span className={`text-[9px] font-bold mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-full inline-block w-fit ${getRoleBadgeClass(role)}`}>
+                  {role.replace('_', ' ')}
+                </span>
               </div>
             )}
           </div>

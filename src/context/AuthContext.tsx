@@ -11,6 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (email?: string, password?: string, role?: UserRole) => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   switchRole: (role: UserRole) => Promise<boolean>;
   refreshUser: () => Promise<void>;
@@ -64,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(data.user);
+      router.push('/dashboard');
       return true;
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -76,8 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const switchRole = async (role: UserRole): Promise<boolean> => {
     const success = await login(undefined, undefined, role);
     if (success) {
-      // Reload current route so all server components and client queries re-evaluate under new role
-      window.location.reload();
+      router.push('/dashboard');
     }
     return success;
   };
@@ -100,6 +101,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
+  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      setUser(data.user);
+      router.push('/dashboard');
+      return true;
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -107,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         error,
         login,
+        register,
         logout,
         switchRole,
         refreshUser,

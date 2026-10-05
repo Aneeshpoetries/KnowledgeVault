@@ -1,21 +1,36 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { getCurrentUser, logAudit } from '@/lib/auth';
+import {
+  getSessionTokenFromCookie,
+  deleteMongoSession,
+  clearSessionCookie,
+  getMongoCurrentUser,
+} from '@/lib/mongo-auth';
+import { logAudit } from '@/lib/auth';
 
 export async function POST() {
-  const user = await getCurrentUser();
-  if (user) {
-    await logAudit({
-      userId: user.id,
-      userName: user.name,
-      userRole: user.role,
-      action: 'LOGOUT',
-      resourceType: 'SYSTEM',
-    });
-  }
+  try {
+    const user = await getMongoCurrentUser();
+    const token = await getSessionTokenFromCookie();
 
-  const cookieStore = await cookies();
-  cookieStore.delete('vault_session_token');
-  cookieStore.delete('kv_session_email');
-  return NextResponse.json({ success: true });
+    if (token) {
+      await deleteMongoSession(token);
+    }
+
+    if (user) {
+      await logAudit({
+        userName: user.name,
+        userRole: user.role,
+        action: 'LOGOUT',
+        resourceType: 'SYSTEM',
+      });
+    }
+
+    await clearSessionCookie();
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Still clear cookies even if DB fails
+    await clearSessionCookie();
+    return NextResponse.json({ success: true });
+  }
 }

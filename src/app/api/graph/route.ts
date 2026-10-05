@@ -54,7 +54,10 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch scoped entities to build rich nodes
-    const [employees, projects, technologies, knowledgeItems, sources] = await Promise.all([
+    const [
+      employees, projects, technologies, knowledgeItems, sources,
+      employeeProjects, projectTechnologies, employeeTechnologies
+    ] = await Promise.all([
       prisma.employee.findMany({ where: employeeWhere }),
       prisma.project.findMany({ where: projectWhere }),
       prisma.technology.findMany(),
@@ -63,23 +66,23 @@ export async function GET(req: NextRequest) {
         take: 40,
       }),
       prisma.knowledgeSource.findMany({ take: 15 }),
+      prisma.employeeProject.findMany(),
+      prisma.projectTechnology.findMany(),
+      prisma.employeeTechnology.findMany(),
     ]);
 
     const scopedEmployeeIds = new Set(employees.map((e) => e.id));
     const scopedProjectIds = new Set(projects.map((p) => p.id));
     const scopedKnowledgeIds = new Set(knowledgeItems.map((k) => k.id));
 
-    // Fetch relationships connected to scoped entities
-    const relationships = await prisma.knowledgeRelationship.findMany({
-      where:
-        user?.role === 'ADMIN'
-          ? {}
-          : {
-              OR: [
-                { sourceEntityId: { in: [...scopedEmployeeIds, ...scopedProjectIds, ...scopedKnowledgeIds] } },
-                { targetEntityId: { in: [...scopedEmployeeIds, ...scopedProjectIds, ...scopedKnowledgeIds] } },
-              ],
-            },
+    // Also fetch any explicit relationships if they exist
+    const explicitRelationships = await prisma.knowledgeRelationship.findMany({
+      where: user?.role === 'ADMIN' ? {} : {
+        OR: [
+          { sourceEntityId: { in: [...scopedEmployeeIds, ...scopedProjectIds, ...scopedKnowledgeIds] } },
+          { targetEntityId: { in: [...scopedEmployeeIds, ...scopedProjectIds, ...scopedKnowledgeIds] } },
+        ],
+      },
       orderBy: { weight: 'desc' },
       take: 100,
     });
@@ -149,8 +152,8 @@ export async function GET(req: NextRequest) {
       });
     });
 
-    // Add any missing source/target from relationships as generic entity nodes
-    relationships.forEach((rel) => {
+    // Add any missing source/target from explicit relationships as generic entity nodes
+    explicitRelationships.forEach((rel) => {
       if (!nodeMap.has(rel.sourceEntityId)) {
         nodeMap.set(rel.sourceEntityId, {
           id: rel.sourceEntityId,
@@ -181,18 +184,104 @@ export async function GET(req: NextRequest) {
 
     const validNodeIds = new Set(allNodes.map((n) => n.id));
 
+    // Synthesize edges from relational data
+    const synthesizedEdges: any[] = [];
+    
+    // Employee -> Project
+    employeeProjects.forEach(ep => {
+      synthesizedEdges.push({
+        id: `ep-${ep.id}`,
+        source: ep.employeeId,
+        target: ep.projectId,
+        label: ep.role || 'WORKS_ON',
+        type: 'WORKS_ON',
+        weight: 1,
+      });
+    });
+
+    // Project -> Technology
+    projectTechnologies.forEach(pt => {
+      synthesizedEdges.push({
+        id: `pt-${pt.id}`,
+        source: pt.projectId,
+        target: pt.technologyId,
+        label: 'USES',
+        type: 'USES',
+        weight: 1,
+      });
+    });
+
+    // Employee -> Technology
+    employeeTechnologies.forEach(et => {
+      synthesizedEdges.push({
+        id: `et-${et.id}`,
+        source: et.employeeId,
+        target: et.technologyId,
+        label: et.proficiency,
+        type: 'KNOWS',
+        weight: 1,
+      });
+    });
+
+    // Knowledge Item Connections
+    knowledgeItems.forEach(ki => {
+      if (ki.projectId) {
+        synthesizedEdges.push({
+          id: `k-p-${ki.id}`,
+          source: ki.projectId,
+          target: ki.id,
+          label: 'DOCUMENTS',
+          type: 'DOCUMENTS',
+          weight: 1,
+        });
+      }
+      if (ki.employeeId) {
+        synthesizedEdges.push({
+          id: `k-e-${ki.id}`,
+          source: ki.employeeId,
+          target: ki.id,
+          label: 'OWNS',
+          type: 'OWNS',
+          weight: 1,
+        });
+      }
+      if (ki.createdByEmployeeId && ki.createdByEmployeeId !== ki.employeeId) {
+        synthesizedEdges.push({
+          id: `k-c-${ki.id}`,
+          source: ki.createdByEmployeeId,
+          target: ki.id,
+          label: 'CREATED',
+          type: 'CREATED',
+          weight: 1,
+        });
+      }
+      if (ki.sourceId) {
+        synthesizedEdges.push({
+          id: `k-s-${ki.id}`,
+          source: ki.sourceId,
+          target: ki.id,
+          label: 'EXTRACTED_FROM',
+          type: 'EXTRACTED_FROM',
+          weight: 1,
+        });
+      }
+    });
+
+    const explicitEdges = explicitRelationships.map((r) => ({
+      id: r.id,
+      source: r.sourceEntityId,
+      target: r.targetEntityId,
+      label: r.relationshipType,
+      type: r.relationshipType,
+      weight: r.weight,
+      description: r.description,
+    }));
+
+    const allEdges = [...synthesizedEdges, ...explicitEdges];
+
     // Filter edges connected to available nodes
-    const edges = relationships
-      .filter((r) => validNodeIds.has(r.sourceEntityId) && validNodeIds.has(r.targetEntityId))
-      .map((r) => ({
-        id: r.id,
-        source: r.sourceEntityId,
-        target: r.targetEntityId,
-        label: r.relationshipType,
-        type: r.relationshipType,
-        weight: r.weight,
-        description: r.description,
-      }));
+    const edges = allEdges
+      .filter((r) => validNodeIds.has(r.source) && validNodeIds.has(r.target));
 
     return NextResponse.json({
       nodes: allNodes,

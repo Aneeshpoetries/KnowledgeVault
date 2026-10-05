@@ -1,37 +1,75 @@
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
   const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-  const model = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
+  const embeddingModel = process.env.EMBEDDING_MODEL || 'text-embedding-004';
 
   if (apiKey && apiKey.trim().length > 0 && !apiKey.includes('your-key')) {
-    try {
-      const response = await fetch(`${baseUrl}/embeddings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          input: text.slice(0, 8000),
-        }),
-      });
+    // ── Gemini native Embeddings API ──────────────────────────────────────────
+    const isGemini =
+      process.env.GEMINI_API_KEY ||
+      baseUrl.includes('generativelanguage.googleapis.com') ||
+      embeddingModel.startsWith('text-embedding-0');
 
-      if (response.ok) {
-        const data = await response.json();
-        const embedding = data.data?.[0]?.embedding;
-        if (Array.isArray(embedding)) {
-          return embedding;
+    if (isGemini) {
+      try {
+        const geminiKey = process.env.GEMINI_API_KEY || apiKey;
+        const model = embeddingModel.startsWith('text-embedding-')
+          ? embeddingModel
+          : 'text-embedding-004';
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: `models/${model}`,
+              content: { parts: [{ text: text.slice(0, 8000) }] },
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const embedding = data.embedding?.values;
+          if (Array.isArray(embedding)) return embedding;
+        } else {
+          const err = await response.text();
+          console.warn('Gemini embedding failed:', err);
         }
+      } catch (err) {
+        console.warn('Gemini embedding error, using local fallback:', err);
       }
-    } catch (err) {
-      console.warn('Embedding API call failed, using deterministic local embedding:', err);
+    } else {
+      // ── OpenAI-compatible Embeddings ────────────────────────────────────────
+      try {
+        const response = await fetch(`${baseUrl}/embeddings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: embeddingModel,
+            input: text.slice(0, 8000),
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const embedding = data.data?.[0]?.embedding;
+          if (Array.isArray(embedding)) return embedding;
+        }
+      } catch (err) {
+        console.warn('Embedding API call failed, using local fallback:', err);
+      }
     }
   }
 
-  // Deterministic local semantic embedding (64 dimensions)
+  // Deterministic local semantic embedding (64 dimensions) — fallback
   return generateDeterministicEmbedding(text);
 }
+
 
 export function generateDeterministicEmbedding(text: string, dim: number = 64): number[] {
   const vec = new Array(dim).fill(0);

@@ -13,7 +13,46 @@ export async function callLLM(
   messages: LLMMessage[],
   options: LLMCompletionOptions = {}
 ): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+
+  // ── Gemini path (preferred if GEMINI_API_KEY is set) ─────────────────────
+  if (geminiKey && geminiKey.trim().length > 0 && !geminiKey.includes('your-key')) {
+    const model = process.env.LLM_MODEL || 'gemini-2.0-flash';
+    // Gemini's OpenAI-compatible endpoint
+    const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/openai';
+
+    try {
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${geminiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: options.temperature ?? 0.2,
+          max_tokens: options.maxTokens ?? 2000,
+          response_format: options.responseFormat,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`Gemini API returned ${response.status}: ${errorText}. Falling back to heuristic engine.`);
+      } else {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) return content;
+      }
+    } catch (err) {
+      console.warn('Gemini API call failed, using intelligent fallback engine:', err);
+    }
+  }
+
+  // ── OpenAI-compatible path (fallback) ────────────────────────────────────
+  const apiKey = openaiKey;
   const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
   const model = process.env.LLM_MODEL || 'gpt-4o-mini';
 
@@ -50,6 +89,7 @@ export async function callLLM(
   // Heuristic AI Fallback: Provides robust, context-aware structured outputs for local demos
   return handleHeuristicFallback(messages, options);
 }
+
 
 function handleHeuristicFallback(
   messages: LLMMessage[],

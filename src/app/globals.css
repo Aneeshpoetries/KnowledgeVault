@@ -3,167 +3,304 @@
 @tailwind utilities;
 
 :root {
-  /* Light Mode RGB Channels (Linear & Vercel modern light aesthetic) */
-  --vault-dark-rgb: 255 255 255;
-  --vault-surface-rgb: 248 250 252;
-  --vault-elevated-rgb: 255 255 255;
-  --vault-border-rgb: 226 232 240;
-  --vault-border-hover-rgb: 203 213 225;
-  --vault-subtle-rgb: 241 245 249;
-  --vault-text-rgb: 15 23 42;
-  --vault-muted-rgb: 71 85 105;
-  --vault-dim-rgb: 100 116 139;
+  /* ── Warm Pastel Light Theme (Jewellery Dashboard) ── */
+  --vault-bg:            #F5E6D8;         /* outer warm peach bg */
+  --vault-dark:          #fdf8ef;         /* main page background (cream) */
+  --vault-surface:       #FFFFFF;         /* card surfaces */
+  --vault-surface-2:     #fcf5e9;         /* secondary cards (warm cream) */
+  --vault-elevated:      #FFFFFF;
+  --vault-border:        #ede4d6;         /* warm border */
+  --vault-border-hover:  #d4c5b0;
+  --vault-subtle:        #f8f1e7;
+  --vault-text:          #1a1207;         /* near-black warm */
+  --vault-muted:         #6b5744;         /* warm brown muted */
+  --vault-dim:           #a0896e;         /* warm tan dim */
 
-  /* Standard Direct CSS Variables */
-  --vault-dark: rgb(var(--vault-dark-rgb));
-  --vault-surface: rgb(var(--vault-surface-rgb));
-  --vault-elevated: rgb(var(--vault-elevated-rgb));
-  --vault-border: rgb(var(--vault-border-rgb));
-  --vault-border-hover: rgb(var(--vault-border-hover-rgb));
-  --vault-subtle: rgb(var(--vault-subtle-rgb));
-  --vault-text: rgb(var(--vault-text-rgb));
-  --vault-muted: rgb(var(--vault-muted-rgb));
-  --vault-dim: rgb(var(--vault-dim-rgb));
+  /* Accent colors matching jewellery palette */
+  --accent-indigo:       #7C6AF7;
+  --accent-indigo-bg:    rgba(124,106,247,0.08);
+  --accent-indigo-border:rgba(124,106,247,0.2);
 
-  --background: #FFFFFF;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #4F46E5;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
-  --secondary-foreground: #0F172A;
-  --muted: #F8FAFC;
-  --muted-foreground: #64748B;
-  --accent: #06B6D4;
-  --accent-foreground: #0F172A;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #4F46E5;
-  --radius: 0.5rem;
+  --accent-amber:        #F59E0B;
+  --accent-rose:         #F391AC;
+  --accent-emerald:      #10B981;
+  --accent-sky:          #A0C4F6;
+  --accent-purple:       #C8A2F9;
 
-  --panel-bg: #FFFFFF;
-  --panel-border: #E2E8F0;
-  --hover-row-bg: rgba(241, 245, 249, 0.85);
-  --grid-pattern-dot: rgba(100, 116, 139, 0.15);
+  /* Card accent colors */
+  --card-gold:           #F8D4A7;
+  --card-blue:           #A0C4F6;
+  --card-purple:         #C8A2F9;
+  --card-peach:          #F8BFA5;
+  --card-pink:           #F59ED5;
+  --card-rose:           #F391AC;
+
+  --background:          #fdf8ef;
+  --foreground:          #1a1207;
+  --border:              #ede4d6;
+  --input:               #ede4d6;
+  --ring:                #7C6AF7;
+  --radius:              1rem;
+
+  --panel-bg:            #FFFFFF;
+  --panel-border:        #ede4d6;
+  --hover-row-bg:        rgba(245, 236, 220, 0.8);
+  --grid-pattern-dot:    rgba(160, 137, 110, 0.12);
+
+  --shadow-card:         0 2px 12px rgba(180, 140, 100, 0.1), 0 1px 3px rgba(180, 140, 100, 0.06);
+  --shadow-elevated:     0 8px 30px rgba(180, 140, 100, 0.15), 0 2px 8px rgba(180, 140, 100, 0.08);
 }
 
 .dark {
-  /* Dark Mode RGB Channels (Obsidian & Quiet Intelligence) */
-  --vault-dark-rgb: 8 11 18;
-  --vault-surface-rgb: 13 17 26;
-  --vault-elevated-rgb: 17 24 39;
-  --vault-border-rgb: 30 38 56;
-  --vault-border-hover-rgb: 43 55 78;
-  --vault-subtle-rgb: 22 31 48;
-  --vault-text-rgb: 241 245 249;
-  --vault-muted-rgb: 148 163 184;
-  --vault-dim-rgb: 100 116 139;
+  /* ── Deep Warm Dark Mode ── */
+  --vault-bg:            #13100b;
+  --vault-dark:          #1a1510;
+  --vault-surface:       #221d16;
+  --vault-surface-2:     #2a2318;
+  --vault-elevated:      #2f2820;
+  --vault-border:        #3d3326;
+  --vault-border-hover:  #5a4e3a;
+  --vault-subtle:        #2a2318;
+  --vault-text:          #f5e8d4;
+  --vault-muted:         #c4a882;
+  --vault-dim:           #8a7258;
 
-  /* Standard Direct CSS Variables */
-  --vault-dark: rgb(var(--vault-dark-rgb));
-  --vault-surface: rgb(var(--vault-surface-rgb));
-  --vault-elevated: rgb(var(--vault-elevated-rgb));
-  --vault-border: rgb(var(--vault-border-rgb));
-  --vault-border-hover: rgb(var(--vault-border-hover-rgb));
-  --vault-subtle: rgb(var(--vault-subtle-rgb));
-  --vault-text: rgb(var(--vault-text-rgb));
-  --vault-muted: rgb(var(--vault-muted-rgb));
-  --vault-dim: rgb(var(--vault-dim-rgb));
+  --accent-indigo:       #9B8BF8;
+  --accent-indigo-bg:    rgba(155,139,248,0.1);
+  --accent-indigo-border:rgba(155,139,248,0.25);
 
-  --background: #080B12;
-  --foreground: #F1F5F9;
-  --card: #0D111A;
-  --card-foreground: #F8FAFC;
-  --popover: #0D111A;
-  --popover-foreground: #F8FAFC;
-  --primary: #6366F1;
-  --primary-foreground: #FFFFFF;
-  --secondary: #161F30;
-  --secondary-foreground: #F8FAFC;
-  --muted: #111827;
-  --muted-foreground: #94A3B8;
-  --accent: #06B6D4;
-  --accent-foreground: #FFFFFF;
-  --border: #1E2638;
-  --input: #1E2638;
-  --ring: #6366F1;
+  --card-gold:           #4a3520;
+  --card-blue:           #1a2c4a;
+  --card-purple:         #2d1f4a;
+  --card-peach:          #4a2e1e;
+  --card-pink:           #4a1e35;
+  --card-rose:           #3d1525;
 
-  --panel-bg: #0D111A;
-  --panel-border: #1E2638;
-  --hover-row-bg: rgba(22, 31, 48, 0.6);
-  --grid-pattern-dot: rgba(148, 163, 184, 0.08);
+  --background:          #1a1510;
+  --foreground:          #f5e8d4;
+  --border:              #3d3326;
+  --input:               #3d3326;
+  --ring:                #9B8BF8;
+
+  --panel-bg:            #221d16;
+  --panel-border:        #3d3326;
+  --hover-row-bg:        rgba(60, 48, 30, 0.7);
+  --grid-pattern-dot:    rgba(194, 168, 130, 0.07);
+
+  --shadow-card:         0 2px 12px rgba(0,0,0,0.3);
+  --shadow-elevated:     0 8px 30px rgba(0,0,0,0.4);
 }
 
+/* ── Base Styles ── */
 html {
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--vault-bg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   overflow-x: hidden;
   letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Minimal Scrollbars */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
-}
+/* ── Custom Scrollbars ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(160,137,110,0.25); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(160,137,110,0.45); }
 
-/* Linear-style subtle panels */
+/* ── Vault Panel System ── */
 .vault-panel {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  border-radius: 0.75rem;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-card);
 }
 
-.vault-panel-subtle {
+.vault-panel-sm {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
 }
 
-.vault-hover-row {
-  transition: all 0.15s ease-out;
-}
-.vault-hover-row:hover {
-  background: var(--hover-row-bg);
-}
+/* ── Table Hover Row ── */
+.vault-hover-row { transition: all 0.15s ease-out; }
+.vault-hover-row:hover { background: var(--hover-row-bg); }
 
-/* Micro dots background for graph and hero */
+/* ── Dot Grid Pattern ── */
 .vault-grid-pattern {
   background-image: radial-gradient(var(--grid-pattern-dot) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
-/* Soft technical glows (sparingly applied) */
+/* ── Stat Cards (Pastel) ── */
+.card-gold    { background: var(--card-gold); }
+.card-blue    { background: var(--card-blue); }
+.card-purple  { background: var(--card-purple); }
+.card-peach   { background: var(--card-peach); }
+.card-pink    { background: var(--card-pink); }
+.card-rose    { background: var(--card-rose); }
+
+/* ── Sidebar Specific ── */
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  color: var(--vault-muted);
+  position: relative;
+}
+.sidebar-nav-item:hover {
+  background: var(--vault-subtle);
+  color: var(--vault-text);
+}
+.sidebar-nav-item.active {
+  background: var(--vault-subtle);
+  color: var(--vault-text);
+  font-weight: 600;
+}
+.sidebar-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  background: var(--accent-indigo);
+  border-radius: 0 3px 3px 0;
+}
+
+/* ── AI Glow ── */
 .glow-ai {
-  box-shadow: 0 0 25px -4px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 25px -4px rgba(124, 106, 247, 0.25);
 }
-
 .glow-active {
-  box-shadow: 0 0 15px -3px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 15px -3px rgba(124, 106, 247, 0.2);
 }
 
-/* Interactive focus ring */
+/* ── Focus Ring ── */
 *:focus-visible {
-  outline: 2px solid rgba(99, 102, 241, 0.6);
-  outline-offset: 1px;
+  outline: 2px solid rgba(124, 106, 247, 0.5);
+  outline-offset: 2px;
 }
+
+/* ── Pill Badges ── */
+.badge-role-admin   { background: #FCA8CA33; color: #8b1a4a; border: 1px solid #FCA8CA66; }
+.badge-role-manager { background: #A0C4F633; color: #1a3f6b; border: 1px solid #A0C4F666; }
+.badge-role-emp     { background: #C8A2F933; color: #4a1a8b; border: 1px solid #C8A2F966; }
+.badge-role-new     { background: #F8BFA533; color: #7a3010; border: 1px solid #F8BFA566; }
+
+.dark .badge-role-admin   { background: rgba(252,168,202,0.15); color: #FCA8CA; border-color: rgba(252,168,202,0.3); }
+.dark .badge-role-manager { background: rgba(160,196,246,0.15); color: #A0C4F6; border-color: rgba(160,196,246,0.3); }
+.dark .badge-role-emp     { background: rgba(200,162,249,0.15); color: #C8A2F9; border-color: rgba(200,162,249,0.3); }
+.dark .badge-role-new     { background: rgba(248,191,165,0.15); color: #F8BFA5; border-color: rgba(248,191,165,0.3); }
+
+/* ── Input Styles ── */
+.vault-input {
+  width: 100%;
+  background: var(--vault-surface);
+  border: 1.5px solid var(--vault-border);
+  border-radius: 0.875rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  color: var(--vault-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.vault-input::placeholder { color: var(--vault-dim); }
+.vault-input:focus {
+  outline: none;
+  border-color: var(--accent-indigo);
+  box-shadow: 0 0 0 3px var(--accent-indigo-bg);
+}
+
+/* ── Button Primary ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--vault-text);
+  color: var(--vault-dark);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.875rem;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-card);
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--accent-indigo);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.875rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 14px rgba(124,106,247,0.3);
+}
+.btn-accent:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ── Animate in ── */
+@keyframes slideInFromBottom {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in { animation: slideInFromBottom 0.2s ease forwards; }
+
+/* ── Risk / Status Badges ── */
+.risk-critical { background: #F391AC33; color: #8b0a30; border: 1px solid #F391AC55; border-radius: 9999px; padding: 2px 10px; font-size: 10px; font-weight: 700; }
+.risk-high     { background: #F8BFA533; color: #7a3010; border: 1px solid #F8BFA555; border-radius: 9999px; padding: 2px 10px; font-size: 10px; font-weight: 700; }
+.risk-medium   { background: #F8D4A733; color: #7a5510; border: 1px solid #F8D4A755; border-radius: 9999px; padding: 2px 10px; font-size: 10px; font-weight: 700; }
+.risk-low      { background: #A0C4F633; color: #1a3f6b; border: 1px solid #A0C4F655; border-radius: 9999px; padding: 2px 10px; font-size: 10px; font-weight: 700; }
+
+.dark .risk-critical { background: rgba(243,145,172,0.2); color: #F391AC; border-color: rgba(243,145,172,0.35); }
+.dark .risk-high     { background: rgba(248,191,165,0.2); color: #F8BFA5; border-color: rgba(248,191,165,0.35); }
+.dark .risk-medium   { background: rgba(248,212,167,0.2); color: #F8D4A7; border-color: rgba(248,212,167,0.35); }
+.dark .risk-low      { background: rgba(160,196,246,0.2); color: #A0C4F6; border-color: rgba(160,196,246,0.35); }
+
+/* ── Shadow utilities ── */
+.shadow-card     { box-shadow: var(--shadow-card); }
+.shadow-elevated { box-shadow: var(--shadow-elevated); }
+
+/* ── ReactFlow: warm theme overrides ── */
+.react-flow__controls button {
+  background: #fff !important;
+  border-color: #ede4d6 !important;
+  color: #6b5744 !important;
+  border-radius: 8px !important;
+  margin-bottom: 2px;
+}
+.react-flow__controls button:hover {
+  background: #f8f1e7 !important;
+  color: #1a1207 !important;
+}
+.react-flow__controls button svg { fill: currentColor !important; }
+
+.react-flow__edge-label { font-family: monospace; }
+
+/* Remove ReactFlow default selection ring (we handle it ourselves) */
+.react-flow__node.selected > div { outline: none !important; box-shadow: none !important; }
+.react-flow__node:focus { outline: none !important; }
+
+/* Minimap warm */
+.react-flow__minimap { border-radius: 12px !important; overflow: hidden; }
+
+/* Edge path warm colors */
+.react-flow__edge-path { stroke-linecap: round; }
+
+/* Panel background */
+.react-flow__panel { font-family: inherit; }

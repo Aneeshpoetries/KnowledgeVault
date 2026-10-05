@@ -85,6 +85,8 @@ export async function GET(req: NextRequest) {
         targetEmployeeId,
         targetProjectId,
       },
+    }, {
+      headers: { 'Cache-Control': 'private, max-age=20, stale-while-revalidate=60' },
     });
   } catch (error) {
     console.error('Failed to calculate coverage:', error);
