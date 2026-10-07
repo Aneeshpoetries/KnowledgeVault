@@ -19,6 +19,7 @@ Unlike static wikis or standard document search tools, KnowledgeVault AI capture
 - **What it connects to** (interactive multi-entity Knowledge Graph).
 - **What knowledge is still missing** (dynamic Knowledge Gap detection).
 - **Active recovery before departure** (Flagship **Employee Exit Mode**).
+- **Git & Repository Mining** (Continuously extracts coding style, debugging patterns, and PR decision rationale from commit diffs).
 
 ---
 

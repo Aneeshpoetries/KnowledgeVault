@@ -199,6 +199,13 @@ The flagship feature uses an adaptive interview loop:
 5. Update graph relationships and re-calculate coverage score
 6. Export a signed-off **Knowledge Transfer Report** (JSON + print)
 
+### 6. Git & Repository Intelligence Engine (Codebase Mining)
+KnowledgeVault AI can attach directly to GitHub/Git repositories to continuously mine developer behavior and architectural intent:
+- **Commit Rationale Mining**: Parses git commit messages and diffs to extract *why* code changed (e.g., *"Fixed memory leak in connection pool by wrapping socket acquisition in a context timeout"*).
+- **PR & Code Review Insights**: Ingests Pull Request discussions to capture unwritten trade-offs and decision rationale.
+- **Developer Debugging Profiles**: Builds expertise maps showing which developer specializes in specific domains, subsystems, or bug categories.
+- **Automated Knowledge Sync**: Ensures documentation stays in sync with commit velocity without requiring engineers to manually write docs.
+
 ---
 
 ## 🗃️ Database Schema Overview
