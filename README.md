@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # KnowledgeVault AI 🧠
 ### AI Knowledge Continuity & Organizational Memory System
 
@@ -32,6 +31,30 @@ COLLECT ──► UNDERSTAND ──► CONNECT ──► ASSIST ──► COVERA
  Chat, Runbooks)                 Dependencies)                                          & Recovery)
 ```
 
+```mermaid
+flowchart LR
+    A(["📄 Collect\nDocs · Transcripts\nChat · Runbooks"])
+    B(["🧠 Understand\nAI Structuring\n& Validation"])
+    C(["🕸️ Connect\nKnowledge Graph\nEntities & Edges"])
+    D(["💬 Assist\nRAG Assistant\nEvidence Cites"])
+    E(["📊 Coverage\n8-Domain\nMath Score"])
+    F(["🚪 Exit Mode\nTacit Recovery\n& Transfer Report"])
+
+    A -->|LLM extract| B
+    B -->|embed + link| C
+    C -->|vector search| D
+    D -->|domain audit| E
+    E -->|gap detection| F
+    F -->|re-embed answers| C
+
+    style A fill:#1e3a5f,color:#93c5fd,stroke:#3b82f6
+    style B fill:#1e3a5f,color:#93c5fd,stroke:#3b82f6
+    style C fill:#1e3a5f,color:#93c5fd,stroke:#3b82f6
+    style D fill:#1e3a5f,color:#93c5fd,stroke:#3b82f6
+    style E fill:#1e3a5f,color:#93c5fd,stroke:#3b82f6
+    style F fill:#7c3aed,color:#ede9fe,stroke:#a78bfa
+```
+
 ---
 
 ## 🛠️ Tech Stack & Architecture
@@ -42,6 +65,41 @@ COLLECT ──► UNDERSTAND ──► CONNECT ──► ASSIST ──► COVERA
 - **Vector & Embeddings**: Clean vector-storage abstraction with normalized float cosine similarity search. Embeddings generated via OpenAI Embedding API or local deterministic semantic n-gram vectorizer.
 - **AI & RAG Engine**: OpenAI-compatible LLM abstraction (`OPENAI_API_KEY`, configurable model via `LLM_MODEL`) with intelligent local heuristic fallback engine ensuring 100% offline and demo reliability without third-party failures.
 - **Document Processing**: Real file ingestion supporting **PDF** (`pdf-parse`), **DOCX** (`mammoth`), **Markdown**, **TXT**, **JSON**, and **CSV**.
+
+```mermaid
+block-beta
+  columns 3
+
+  block:frontend["🖥️ Frontend Layer"]:
+    columns 1
+    FE1["Next.js 15 App Router"]
+    FE2["React 19 + TypeScript"]
+    FE3["Tailwind + Framer Motion"]
+    FE4["React Flow (Knowledge Graph)"]
+    FE5["Recharts (Coverage Dashboard)"]
+  end
+
+  block:backend["⚙️ Backend / API Layer"]:
+    columns 1
+    BE1["Next.js Server Actions"]
+    BE2["REST API Routes /api/**"]
+    BE3["Prisma ORM"]
+    BE4["RBAC Middleware"]
+    BE5["Document Parser"]
+  end
+
+  block:ai["🤖 AI & Data Layer"]:
+    columns 1
+    AI1["OpenAI LLM (GPT-4o-mini)"]
+    AI2["Embedding Model"]
+    AI3["Cosine Similarity Search"]
+    AI4["Heuristic Fallback Engine"]
+    AI5["SQLite / PostgreSQL"]
+  end
+
+  frontend --> backend
+  backend --> ai
+```
 
 ---
 
@@ -84,36 +142,131 @@ KnowledgeVault AI comes pre-seeded with realistic enterprise data from **NovaTec
 
 ---
 
-## 💻 Local Development Setup
+## 💻 Getting Started
 
 ### Prerequisites
-- Node.js (v18, v20, v22, or v24)
-- npm (v9+)
 
-### Installation
+| Tool | Version | Notes |
+| :--- | :--- | :--- |
+| Node.js | v18 / v20 / v22 / v24 | LTS recommended |
+| npm | v9+ | Bundled with Node.js |
+| Git | any recent | For cloning |
+
+> **No external database required.** KnowledgeVault AI uses **SQLite** by default — zero installation needed for local development.
+
+---
+
+### ⚡ Quick Start (copy-paste-run)
 
 ```bash
-# 1. Clone repository and navigate to workspace
-git clone <repo-url>
-cd AI_Continuity_System
+# 1. Clone the repository
+git clone https://github.com/Anushka5442001/KnowledgeVault-AI
+cd KnowledgeVault-AI
 
-# 2. Install dependencies
+# 2. Install all dependencies
 npm install
 
-# 3. Initialize SQLite database & Prisma Client
+# 3. Set up environment variables
+#    (copy the example file; safe defaults work out-of-the-box)
+cp .env.example .env
+
+# 4. Push Prisma schema → creates prisma/dev.db (SQLite)
 npm run db:push
 
-# 4. Seed realistic NovaTech enterprise dataset
+# 5. Seed the database with the NovaTech demo dataset
 npm run db:seed
 
-# 5. Run tests
+# 6. (Optional) Run the automated test suite
 npm test
 
-# 6. Start development server
+# 7. Start the development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+✅ Open **[http://localhost:3000](http://localhost:3000)** in your browser.  
+🔐 Log in with any of the [demo credentials](#-demo-persona--evaluation-credentials) listed below.
+
+---
+
+### 📋 Step-by-Step Breakdown
+
+#### Step 1 — Clone & enter the project
+```bash
+git clone https://github.com/Anushka5442001/KnowledgeVault-AI
+cd KnowledgeVault-AI
+```
+
+#### Step 2 — Install dependencies
+```bash
+npm install
+```
+This installs Next.js 15, Prisma, React 19, Framer Motion, React Flow, and all other declared packages.
+
+#### Step 3 — Configure environment
+```bash
+cp .env.example .env
+```
+The `.env.example` file ships with safe defaults. The application is fully functional **without** an OpenAI key — the built-in deterministic heuristic fallback engine handles all AI responses.
+
+To unlock GPT-powered responses, add your key:
+```ini
+OPENAI_API_KEY="sk-..."
+```
+
+#### Step 4 — Initialize the database
+```bash
+npm run db:push
+```
+Runs `prisma db push` which creates `prisma/dev.db` (SQLite) and syncs the full schema (Users, Employees, Projects, KnowledgeItems, Embeddings, Graph Relationships, Exit Sessions, etc.).
+
+#### Step 5 — Seed demo data
+```bash
+npm run db:seed
+```
+Populates the database with the **NovaTech Systems** enterprise scenario: 4 users, 3 projects, 20+ knowledge items, pre-built graph relationships, knowledge gaps, and a realistic coverage score of 54%.
+
+#### Step 6 — Run tests _(optional but recommended)_
+```bash
+npm test
+```
+Executes the Node.js test suite validating the embedding pipeline, cosine similarity, coverage math, gap detection, and exit-mode session logic.
+
+#### Step 7 — Start the dev server
+```bash
+npm run dev
+```
+Launches Next.js on **http://localhost:3000** with hot-module replacement enabled.
+
+---
+
+### 🔧 Other Useful Commands
+
+```bash
+# Regenerate Prisma Client after schema changes
+npm run db:generate
+
+# Production build (bundles & optimizes)
+npm run build
+
+# Start the production server (after build)
+npm start
+
+# Re-seed the database from scratch
+npm run db:seed
+```
+
+---
+
+### 🐛 Troubleshooting
+
+| Symptom | Likely Cause | Fix |
+| :--- | :--- | :--- |
+| `Cannot find module '@prisma/client'` | Prisma client not generated | Run `npm run db:generate` |
+| `Table not found` / Prisma migration error | DB schema out of sync | Run `npm run db:push` |
+| `Module not found: pdf-parse` | Incomplete install | Run `npm install` |
+| AI assistant returns generic answers | No `OPENAI_API_KEY` set | Add key to `.env` or rely on offline fallback |
+| Port 3000 already in use | Another process running | Run `npm run dev -- -p 3001` |
+| Login fails with demo credentials | DB not seeded | Run `npm run db:seed` |
 
 ---
 
@@ -153,6 +306,94 @@ Key models implemented in `prisma/schema.prisma`:
 - `KnowledgeConflict`: Detected operational contradictions with reconciliation workflows.
 - `Activity` & `Notification`: Real-time audit trails and alerting.
 
+```mermaid
+erDiagram
+    User {
+        string id PK
+        string email
+        string role
+        string name
+    }
+    Employee {
+        string id PK
+        string userId FK
+        float coverageScore
+        float concentrationRatio
+        string tacitKnowledgeRisk
+    }
+    Project {
+        string id PK
+        string name
+        string ownerId FK
+        float architectureScore
+        float deploymentScore
+    }
+    KnowledgeItem {
+        string id PK
+        string employeeId FK
+        string projectId FK
+        string title
+        string whyItMatters
+        float confidence
+        string riskLevel
+    }
+    KnowledgeSource {
+        string id PK
+        string knowledgeItemId FK
+        string type
+        string provenance
+    }
+    KnowledgeEmbedding {
+        string id PK
+        string knowledgeItemId FK
+        float[] vector
+    }
+    KnowledgeRelationship {
+        string id PK
+        string fromId FK
+        string toId FK
+        string type
+    }
+    KnowledgeGap {
+        string id PK
+        string projectId FK
+        string domain
+        string severity
+    }
+    ExitSession {
+        string id PK
+        string employeeId FK
+        string status
+    }
+    ExitQuestion {
+        string id PK
+        string sessionId FK
+        string question
+    }
+    ExitAnswer {
+        string id PK
+        string questionId FK
+        string answer
+    }
+    Activity {
+        string id PK
+        string userId FK
+        string action
+    }
+
+    User ||--o{ Employee : "has profile"
+    Employee ||--o{ KnowledgeItem : "owns"
+    Employee ||--o{ ExitSession : "has exit session"
+    Project ||--o{ KnowledgeItem : "contains"
+    Project ||--o{ KnowledgeGap : "has gaps"
+    KnowledgeItem ||--o{ KnowledgeSource : "sourced from"
+    KnowledgeItem ||--|| KnowledgeEmbedding : "embedded as"
+    KnowledgeItem ||--o{ KnowledgeRelationship : "relates to"
+    ExitSession ||--o{ ExitQuestion : "has questions"
+    ExitQuestion ||--o{ ExitAnswer : "answered by"
+    User ||--o{ Activity : "generates"
+```
+
 ---
 
 ## 🧪 Testing
@@ -173,9 +414,18 @@ Tests verify:
 
 ---
 
+## 🤝 Contributing
+
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'feat: add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+---
+
 ## 🛡️ License
 
 MIT License. Developed for enterprise knowledge continuity and organizational memory resilience.
-=======
-# KnowledgeVault-AI
->>>>>>> 74980ab58255c0bf1eeac15da2115403a78ca8f9
