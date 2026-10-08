@@ -1,36 +1,259 @@
-import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Check, FileText, GitBranch, Network, ShieldCheck, Users, Layers, Search, LockKeyhole } from '@/components/ui/icons';
-import { KnowledgeVaultLogo } from '@/components/ui/KnowledgeVaultLogo';
-import { MemoryGraph, InterviewDemo, ExitDemo, AnswerDemo, StoryMotion } from '@/components/marketing/ProductStory';
-import { CinematicDemo } from '@/components/marketing/CinematicDemo';
-import './marketing-redesign.css';
-import './cinematic.css';
-import './marketing-polish.css';
+import Link from "next/link";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  ShieldCheck,
+  Users,
+} from "@/components/ui/icons";
+import { KnowledgeVaultLogo } from "@/components/ui/KnowledgeVaultLogo";
+import {
+  InterviewDemo,
+  AnswerDemo,
+  StoryMotion,
+} from "@/components/marketing/ProductStory";
+import { MemoryFlow } from "@/components/marketing/MemoryFlow";
+import { CinematicDemo } from "@/components/marketing/CinematicDemo";
+import "./marketing-redesign.css";
+import "./cinematic.css";
+import "./marketing-polish.css";
+import "./marketing-flow.css";
 
-function CTA({ href, children, secondary = false }: { href: string; children: React.ReactNode; secondary?: boolean }) {
-  return <Link href={href} className={`kv-button ${secondary ? 'kv-button-secondary' : ''}`}>{children}<ArrowUpRight size={16} /></Link>;
+function CTA({
+  href,
+  children,
+  secondary = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  secondary?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`kv-button ${secondary ? "kv-button-secondary" : ""}`}
+    >
+      {children}
+      <ArrowUpRight size={16} />
+    </Link>
+  );
 }
-function Heading({ number, label, title, children }: { number: string; label: string; title: string; children?: React.ReactNode }) {
-  return <div className="kv-section-heading"><p className="kv-eyebrow"><span>{number}</span>{label}</p><h2>{title}</h2>{children && <p className="kv-lead">{children}</p>}</div>;
+function Heading({
+  number,
+  label,
+  title,
+  children,
+}: {
+  number: string;
+  label: string;
+  title: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="kv-section-heading">
+      <p className="kv-eyebrow">
+        <span>{number}</span>
+        {label}
+      </p>
+      <h2>{title}</h2>
+      {children && <p className="kv-lead">{children}</p>}
+    </div>
+  );
 }
 export default function LandingPage() {
-  return <div className="kv-marketing"><StoryMotion />
-    <header className="kv-header"><div className="kv-container kv-nav"><Link href="/" className="kv-brand"><KnowledgeVaultLogo size={28} /><span>KnowledgeVault<span className="kv-brand-dot">.</span></span></Link><nav aria-label="Main navigation"><a href="#memory">Product</a><a href="#interview">How it works</a><a href="#exit-mode">Use cases</a><a href="#trust">Trust & security</a></nav><div className="kv-nav-actions"><Link href="/login">Sign in</Link><CTA href="/login">Get started</CTA></div></div></header>
-    <main>
-      <section className="kv-hero kv-container"><div className="kv-hero-copy"><p className="kv-eyebrow"><span className="kv-status-dot" />KNOWLEDGE CONTINUITY FOR ENGINEERING TEAMS</p><h1>People leave.<br /><span>Knowledge stays.</span></h1><p className="kv-hero-description">Find the procedures only one person knows. Capture their experience in focused interviews, verify it, and give the next engineer answers with sources.</p><div className="kv-actions"><CTA href="#product-demo">See the product in motion</CTA><CTA secondary href="/login">Explore the workspace</CTA></div><div className="kv-hero-foot"><span>FIND KNOWLEDGE GAPS</span><span>CAPTURE THE CONTEXT</span><span>VERIFY BEFORE RELYING</span></div></div></section>
-      <CinematicDemo /><p className="kv-demo-disclosure kv-container">Illustrative demo workspace. Coverage, confidence, and ownership figures show an example continuity assessment.</p>
-      <section className="kv-section kv-container kv-problem" data-reveal><Heading number="01" label="THE HIDDEN PROBLEM" title="Your company knows more than it can remember.">The answer exists somewhere. In a conversation. An old incident. The person who fixed it last time.</Heading><div className="kv-fragments">{[{ icon: FileText, source: 'OLD RUNBOOK', text: '“Restart the worker if requests time out.”', detail: 'Last updated 18 months ago' }, { icon: GitBranch, source: 'INCIDENT #382', text: '“A restart can duplicate charges during peak billing.”', detail: 'Buried in a resolved discussion' }, { icon: Users, source: 'RAHUL’S EXPERIENCE', text: '“Check Redis first. The order matters.”', detail: 'Never written down' }].map(({ icon: Icon, source, text, detail }) => <article key={source}><Icon size={21} /><p className="kv-eyebrow">{source}</p><h3>{text}</h3><small>{detail}</small></article>)}</div><p className="kv-section-note">More documents won’t fix a missing connection.</p></section>
-      <section className="kv-section kv-container" id="memory" data-reveal><Heading number="02" label="ONE CONNECTED MEMORY" title="Turn scattered context into organizational memory.">Bring documents, transcripts, and employee knowledge together. Connect each procedure to its owner, project, and original evidence.</Heading><MemoryGraph /></section>
-      <section className="kv-section kv-container kv-split" id="capture" data-reveal><Heading number="03" label="CAPTURE CONTEXT" title="Capture the context, not just the document.">The important part isn’t a paragraph. It’s why the system behaves that way, when to act, and who knows the answer.</Heading><div className="kv-stage kv-extraction"><p className="kv-eyebrow">FROM EVERYDAY EXPERIENCE</p><blockquote>“I usually check Redis before restarting the payment worker because a queue backlog changes the retry behavior.”</blockquote><div className="kv-extraction-arrow"><ArrowRight size={19} /><span>Context becomes structure</span></div><div className="kv-memory-object"><div className="kv-object-heading"><Network size={18} /><strong>Payment recovery sequence</strong><span className="kv-tag">NEW MEMORY</span></div><dl><div><dt>System</dt><dd>Payment Service</dd></div><div><dt>Dependency</dt><dd>Redis → Payment Worker</dd></div><div><dt>Action</dt><dd>Check Redis before restarting</dd></div><div><dt>Condition</dt><dd>Queue backlog + timeout pattern</dd></div><div><dt>Owner</dt><dd>Rahul Sharma</dd></div></dl><footer><span>Interview evidence attached</span><strong>92% confidence</strong></footer></div></div></section>
-      <section className="kv-section kv-container kv-split" id="coverage" data-reveal><div className="kv-stage kv-coverage"><div className="kv-stage-title"><span>KNOWLEDGE COVERAGE</span><span>Payment Service</span></div>{[['Architecture',92],['Deployment',88],['Monitoring',76],['Troubleshooting',61],['Edge cases',42],['Legacy systems',28]].map(([name,value]) => <div className="kv-coverage-row" key={name}><div><span>{name}</span><strong>{value}%</strong></div><div className="kv-track"><span style={{ width: `${value}%`, background: Number(value) < 50 ? '#dc9b56' : undefined }} /></div></div>)}<a className="kv-gap-alert" href="#risk"><span>3 critical knowledge gaps detected</span><ArrowRight size={16} /></a></div><Heading number="04" label="UNDERSTAND COVERAGE" title="Knowing what you know is only half the problem."><strong className="kv-emphasis">Know what you don’t.</strong> See where knowledge is healthy, where it’s getting stale, and where your team is operating without a shared answer.</Heading></section>
-      <section className="kv-section kv-container" id="risk" data-reveal><Heading number="05" label="MAKE CONCENTRATION VISIBLE" title="When one person becomes the system.">Some of your most important infrastructure lives in someone’s head. Find the dependency while there’s still time to preserve it.</Heading><div className="kv-risk-layout"><div className="kv-ownership"><p className="kv-eyebrow">PAYMENT SERVICE · KNOWLEDGE OWNERSHIP</p><div className="kv-ownership-bar"><span>Rahul · 84%</span><span>16%</span></div><div className="kv-owner-labels"><span><i>RS</i>Rahul Sharma</span><span><i>AM</i>Anita Mehta</span></div><div className="kv-risk-connection" /><article className="kv-risk-memory"><span className="kv-tag kv-tag-risk">HIGH RISK · SINGLE OWNER</span><h3>Legacy retry logic</h3><p>Fallback behavior when Billing Service becomes unavailable is only partially documented.</p><a href="#interview">Start a targeted interview <ArrowRight size={15} /></a></article></div><div className="kv-risk-summary"><p className="kv-eyebrow">KNOWLEDGE RISK DETECTED</p>{[['04','Critical dependencies'],['03','Undocumented systems'],['02','Single-owner workflows']].map(([n,label]) => <div key={label}><strong>{n}</strong><span>{label}</span></div>)}<p>Concentrated knowledge is an opportunity to build continuity.</p></div></div></section>
-      <section className="kv-section kv-interview-section" id="interview"><div className="kv-container" data-reveal><Heading number="06" label="THE KNOWLEDGE-TRANSFER INTERVIEW" title="Don’t ask people to document everything. Ask what matters.">An interview that starts with a real gap, asks the right follow-up, and preserves the reasoning behind the answer.</Heading><InterviewDemo /></div></section>
-      <section className="kv-section kv-container kv-split" id="exit-mode" data-reveal><Heading number="07" label="PRESERVE EXPERTISE RESPECTFULLY" title="Before someone leaves, find what only they know.">Give experience a thoughtful handover. Identify unique dependencies, guide a focused conversation, and leave the next person with more than a folder of documents.</Heading><ExitDemo /></section>
-      <section className="kv-section kv-container kv-split" id="trust" data-reveal><div className="kv-stage kv-evidence-card"><div className="kv-stage-title"><span>VERIFIED ORGANIZATIONAL MEMORY</span><ShieldCheck size={18} /></div><h3>How do we handle payment timeouts?</h3><p>Check Redis memory and queue depth before restarting Payment Service. Confirm the invoice cache is warm before retrying.</p><div className="kv-evidence-list"><span className="kv-eyebrow">EVIDENCE</span>{['Incident #382','Exit interview — Rahul','Payment deployment guide'].map(source => <div key={source}><Check size={15} /><span>{source}</span><FileText size={14} /></div>)}</div><dl className="kv-trust-metadata"><div><dt>Owner</dt><dd>Rahul Sharma</dd></div><div><dt>Last verified</dt><dd>September 2026</dd></div><div><dt>Confidence</dt><dd>92%</dd></div><div><dt>Status</dt><dd className="kv-verified">✓ Verified</dd></div></dl></div><Heading number="08" label="EVIDENCE IS PART OF THE ANSWER" title="Memory is only useful when you can trust it.">A source you can inspect. An owner you can ask. A verification date you can see. Confidence becomes useful when you can understand what it’s built on.</Heading></section>
-      <section className="kv-section kv-container" id="retrieve" data-reveal><Heading number="09" label="ASK ORGANIZATIONAL MEMORY" title="When the expert is gone, the answer is still there.">Retrieve the operational context, understand the evidence, and take the next step with confidence.</Heading><AnswerDemo /></section>
-      <section className="kv-section kv-container" data-reveal><Heading number="10" label="THE ORGANIZATION BECOMES LESS FRAGILE" title="Make the organization less dependent on individual memory." /><div className="kv-resilience"><div><p className="kv-eyebrow">BEFORE · FRAGMENTED CONTEXT</p>{['Knowledge concentrated','Single points of failure','Unknown gaps','Risk when people leave'].map((text,i) => <p key={text}><span>0{i+1}</span>{text}</p>)}</div><div><p className="kv-eyebrow">AFTER · SHARED ORGANIZATIONAL MEMORY</p>{['Context captured and structured','Gaps and dependencies understood','Memory verified with evidence','Expertise available to the people who need it'].map(text => <p key={text}><Check size={17} />{text}</p>)}</div></div></section>
-      <section className="kv-section kv-container" id="capabilities" data-reveal><Heading number="11" label="ONE SYSTEM. THE WHOLE CONTINUITY LOOP." title="Built for the knowledge that matters." /><div className="kv-capabilities">{[{title:'Capture',icon:Layers,description:'Documents, transcripts, notes, and focused interviews.',href:'/capture'},{title:'Understand',icon:Network,description:'Coverage, dependencies, gaps, ownership risk.',href:'/coverage'},{title:'Preserve',icon:ShieldCheck,description:'Structured memories, provenance, verification.',href:'/knowledge'},{title:'Retrieve',icon:Search,description:'Evidence-backed answers and source context.',href:'/assistant'},{title:'Manage',icon:LockKeyhole,description:'Team ownership, roles, and workspace permissions.',href:'/settings'}].map(({title,icon:Icon,description,href}) => <Link href={href} key={title}><Icon size={23} strokeWidth={1.5} /><h3>{title}<ArrowUpRight size={15} /></h3><p>{description}</p></Link>)}</div></section>
-      <section className="kv-final kv-container" data-reveal><KnowledgeVaultLogo size={40} /><p className="kv-eyebrow">EXPERIENCE SHOULD OUTLAST EMPLOYMENT</p><h2>Keep what makes<br />your organization work.</h2><p>The people will move on. The knowledge can stay.</p><CTA href="/login">Protect organizational knowledge</CTA></section>
-    </main><footer className="kv-footer kv-container"><Link className="kv-brand" href="/"><KnowledgeVaultLogo size={22} />KnowledgeVault.</Link><span>Organizational memory, made trustworthy.</span><div><a href="#memory">Product</a><a href="#trust">Trust</a><Link href="/login">Sign in <ArrowUpRight size={13} /></Link></div></footer>
-  </div>;
+  return (
+    <div className="kv-marketing">
+      <StoryMotion />
+      <header className="kv-header">
+        <div className="kv-container kv-nav">
+          <Link href="/" className="kv-brand">
+            <KnowledgeVaultLogo size={28} />
+            <span>
+              KnowledgeVault<span className="kv-brand-dot">.</span>
+            </span>
+          </Link>
+          <nav aria-label="Main navigation">
+            <a href="#memory">Product</a>
+            <a href="#coverage">Coverage & risk</a>
+            <a href="#interview">How it works</a>
+            <a href="#retrieve">Answers & evidence</a>
+          </nav>
+          <div className="kv-nav-actions">
+            <Link href="/login">Sign in</Link>
+            <CTA href="/login">Get started</CTA>
+          </div>
+        </div>
+      </header>
+      <main>
+        <section className="kv-hero kv-container">
+          <div className="kv-hero-copy">
+            <p className="kv-eyebrow">
+              <span className="kv-status-dot" />
+              KNOWLEDGE CONTINUITY FOR ENGINEERING TEAMS
+            </p>
+            <h1>
+              People leave.
+              <br />
+              <span>Knowledge stays.</span>
+            </h1>
+            <p className="kv-hero-description">
+              Find the procedures only one person knows. Capture their
+              experience in focused interviews, verify it, and give the next
+              engineer answers with sources.
+            </p>
+            <div className="kv-actions">
+              <CTA href="#product-demo">See the product in motion</CTA>
+              <CTA secondary href="/login">
+                Explore the workspace
+              </CTA>
+            </div>
+            <div className="kv-hero-foot">
+              <span>FIND KNOWLEDGE GAPS</span>
+              <span>CAPTURE THE CONTEXT</span>
+              <span>VERIFY BEFORE RELYING</span>
+            </div>
+          </div>
+        </section>
+        <CinematicDemo />
+        <p className="kv-demo-disclosure kv-container">
+          Illustrative demo workspace. Coverage, confidence, and ownership
+          figures show an example continuity assessment.
+        </p>
+        <section className="kv-section kv-container" id="memory" data-reveal>
+          <Heading
+            number="01"
+            label="CAPTURE THE CONTEXT"
+            title="Turn scattered context into organizational memory."
+          >
+            The answer is rarely in one document. Connect documents, incident
+            notes, and employee experience to the procedures, projects, and
+            people they describe.
+          </Heading>
+          <MemoryFlow />
+        </section>
+        <section
+          className="kv-section kv-container kv-split"
+          id="coverage"
+          data-reveal
+        >
+          <div className="kv-stage kv-coverage">
+            <div className="kv-stage-title">
+              <span>KNOWLEDGE COVERAGE</span>
+              <span>Payment Service · Sample</span>
+            </div>
+            {[
+              ["Architecture", 92],
+              ["Deployment", 88],
+              ["Troubleshooting", 61],
+              ["Edge cases", 42],
+            ].map(([name, value]) => (
+              <div className="kv-coverage-row" key={name}>
+                <div>
+                  <span>{name}</span>
+                  <strong>{value}%</strong>
+                </div>
+                <div className="kv-track">
+                  <span
+                    style={{
+                      width: `${value}%`,
+                      background: Number(value) < 50 ? "#b48450" : undefined,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            <div className="kv-coverage-owner">
+              <Users size={17} />
+              <div>
+                <strong>One owner holds 84% of the context</strong>
+                <p>Rahul Sharma · Payment Service</p>
+              </div>
+            </div>
+            <a className="kv-gap-alert" href="#interview">
+              <span>3 critical gaps to address</span>
+              <ArrowRight size={16} />
+            </a>
+          </div>
+          <div>
+            <span id="risk" className="kv-anchor" />
+            <Heading
+              number="02"
+              label="SEE WHAT’S AT RISK"
+              title="Know the gaps before they become incidents."
+            >
+              See what is documented, what is getting stale, and what only one
+              person knows. Use coverage and ownership together to decide what
+              needs attention first.
+            </Heading>
+            <p className="kv-inline-note">
+              A missing runbook and a single-owner workflow need different
+              conversations. Start with the context that puts continuity at
+              risk.
+            </p>
+          </div>
+        </section>
+        <section className="kv-section kv-interview-section" id="interview">
+          <div className="kv-container" data-reveal>
+            <span id="exit-mode" className="kv-anchor" />
+            <Heading
+              number="03"
+              label="PRESERVE THE EXPERIENCE"
+              title="Don’t ask people to document everything. Ask what matters."
+            >
+              Turn a real knowledge gap into a focused interview. Capture the
+              reasoning, review the result, and give the next engineer a useful
+              handover when someone leaves or changes teams.
+            </Heading>
+            <InterviewDemo />
+          </div>
+        </section>
+        <section className="kv-section kv-container" id="retrieve" data-reveal>
+          <span id="trust" className="kv-anchor" />
+          <Heading
+            number="04"
+            label="ANSWERS WITH EVIDENCE"
+            title="When the expert is gone, the answer is still there."
+          >
+            Ask about a procedure or incident. Inspect the original evidence,
+            see who owns the knowledge, and check when it was verified before
+            relying on the answer.
+          </Heading>
+          <AnswerDemo />
+          <p className="kv-trust-strip">
+            <ShieldCheck size={17} />
+            <span>Human verification</span>
+            <span>Original evidence</span>
+            <span>Role-based workspace access</span>
+          </p>
+        </section>
+        <section className="kv-final kv-container" data-reveal>
+          <KnowledgeVaultLogo size={40} />
+          <p className="kv-eyebrow">EXPERIENCE SHOULD OUTLAST EMPLOYMENT</p>
+          <h2>
+            Keep what makes
+            <br />
+            your organization work.
+          </h2>
+          <p>
+            Less knowledge held by one person. A clearer starting point for
+            everyone.
+          </p>
+          <CTA href="/login">Explore the workspace</CTA>
+        </section>
+      </main>
+      <footer className="kv-footer kv-container">
+        <Link className="kv-brand" href="/">
+          <KnowledgeVaultLogo size={22} />
+          KnowledgeVault.
+        </Link>
+        <span>Organizational memory, made trustworthy.</span>
+        <div>
+          <a href="#memory">Product</a>
+          <a href="#retrieve">Evidence & trust</a>
+          <Link href="/login">
+            Sign in <ArrowUpRight size={13} />
+          </Link>
+        </div>
+      </footer>
+    </div>
+  );
 }

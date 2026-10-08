@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Demo sessions are browser-local previews. Prevent them from reaching live data APIs.
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   if (path === '/api/auth/login' || path === '/api/auth/me' || path === '/api/auth/logout') return NextResponse.next();
   const token = request.cookies.get('vault_session_token')?.value;

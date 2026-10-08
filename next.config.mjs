@@ -1,7 +1,7 @@
+import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Optional isolated output keeps validation builds from disrupting a running dev server.
-  distDir: process.env.NEXT_BUILD_DIR || '.next',
   reactStrictMode: true,
   serverExternalPackages: ['pdf-parse'],
   experimental: {
@@ -9,9 +9,11 @@ const nextConfig = {
       bodySizeLimit: '15mb',
     },
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 };
 
-export default nextConfig;
+// Keep development chunks separate from production and validation builds.
+export default (phase) => ({
+  ...nextConfig,
+  distDir: process.env.NEXT_BUILD_DIR ||
+    (phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next'),
+});
