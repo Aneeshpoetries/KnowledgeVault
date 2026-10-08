@@ -7,7 +7,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { WorkspaceRoot } from '@/components/layout/AppShell';
 
 export const metadata: Metadata = {
-  title: 'KnowledgeVault AI | AI Knowledge Continuity System',
+  title: 'KnowledgeVault AI',
   description: 'Turn employee experience into a living, searchable organizational memory.',
   icons: {
     icon: [
