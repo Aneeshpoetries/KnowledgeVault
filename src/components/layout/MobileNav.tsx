@@ -1,48 +1,125 @@
-'use client';
-
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Brain, Bot, Network, Menu } from 'lucide-react';
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Brain,
+  Bot,
+  Network,
+  Menu,
+  X,
+  ChevronRight,
+} from "@/components/ui/icons";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 export function MobileNav() {
   const pathname = usePathname();
-
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
   const tabs = [
-    { label: 'Home',      href: '/dashboard',  icon: LayoutDashboard },
-    { label: 'Knowledge', href: '/knowledge',  icon: Brain },
-    { label: 'Ask AI',    href: '/assistant',  icon: Bot, highlight: true },
-    { label: 'Graph',     href: '/graph',      icon: Network },
-    { label: 'More',      href: '/exit-mode',  icon: Menu },
-  ];
-
+    { label: "Home", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Knowledge", href: "/knowledge", icon: Brain },
+    { label: "Ask AI", href: "/assistant", icon: Bot },
+    { label: "Graph", href: "/graph", icon: Network },
+  ].filter((item) => user?.role !== "NEW_EMPLOYEE" || item.href !== "/graph");
+  const links = [
+    {
+      label: "Capture knowledge",
+      href: "/capture",
+      roles: ["ADMIN", "MANAGER", "EMPLOYEE"],
+    },
+    { label: "Review queue", href: "/reviews", roles: ["ADMIN", "MANAGER"] },
+    {
+      label: "Risk & coverage",
+      href: "/coverage",
+      roles: ["ADMIN", "MANAGER", "EMPLOYEE"],
+    },
+    { label: "Continuity gaps", href: "/gaps", roles: ["ADMIN", "MANAGER"] },
+    {
+      label: "Employees",
+      href: "/employees",
+      roles: ["ADMIN", "MANAGER", "NEW_EMPLOYEE"],
+    },
+    {
+      label: "Projects",
+      href: "/projects",
+      roles: ["ADMIN", "MANAGER", "EMPLOYEE", "NEW_EMPLOYEE"],
+    },
+    { label: "Sources", href: "/sources", roles: ["ADMIN"] },
+    {
+      label: "Exit Mode",
+      href: "/exit-mode",
+      roles: ["ADMIN", "MANAGER", "EMPLOYEE"],
+    },
+    {
+      label: "Settings",
+      href: "/settings",
+      roles: ["ADMIN", "MANAGER", "EMPLOYEE", "NEW_EMPLOYEE"],
+    },
+  ].filter((item) => item.roles.includes(user?.role || ""));
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-vault-surface/95 backdrop-blur-md border-t border-vault-border z-40 flex items-center justify-around px-2 select-none shadow-elevated">
-      {tabs.map((tab) => {
-        const Icon = tab.icon;
-        const isActive = pathname === tab.href || (tab.href !== '/dashboard' && pathname.startsWith(tab.href));
-
-        return (
+    <>
+      <nav
+        className="vault-mobile-nav md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-vault-border"
+        aria-label="Mobile workspace navigation"
+      >
+        {tabs.map(({ label, href, icon: Icon }) => (
           <Link
-            key={tab.href}
-            href={tab.href}
-            className={`flex flex-col items-center justify-center w-full py-1.5 text-[10px] font-semibold transition-all rounded-2xl mx-0.5 ${
-              isActive
-                ? tab.highlight
-                  ? 'text-[#7C6AF7] bg-[#C8A2F9]/15'
-                  : 'text-vault-text bg-vault-subtle'
-                : 'text-vault-dim hover:text-vault-muted'
-            }`}
+            key={href}
+            href={href}
+            aria-current={pathname.startsWith(href) ? "page" : undefined}
+            className={`flex flex-col items-center justify-center gap-1 w-full min-h-12 text-[11px] ${pathname.startsWith(href) ? "text-vault-text" : "text-vault-dim"}`}
           >
-            <Icon
-              className={`w-5 h-5 mb-1 ${
-                isActive ? (tab.highlight ? 'text-[#7C6AF7]' : 'text-vault-text') : 'text-vault-dim'
-              }`}
-            />
-            <span>{tab.label}</span>
+            <Icon size={19} />
+            <span>{label}</span>
           </Link>
-        );
-      })}
-    </nav>
+        ))}
+        <button
+          type="button"
+          className="flex flex-col items-center justify-center gap-1 w-full min-h-12 text-[11px] text-vault-dim"
+          onClick={() => setOpen(true)}
+          aria-label="More workspace navigation"
+          aria-expanded={open}
+          aria-haspopup="dialog"
+        >
+          <Menu size={19} />
+          <span>More</span>
+        </button>
+      </nav>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        label="Workspace navigation"
+        className="kv-mobile-menu"
+      >
+        <header>
+          <h2>Workspace</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(false)}
+            aria-label="Close navigation"
+          >
+            <X size={18} />
+          </Button>
+        </header>
+        <nav aria-label="More workspace pages">
+          {links.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              aria-current={pathname.startsWith(item.href) ? "page" : undefined}
+            >
+              {item.label}
+              <ChevronRight size={16} />
+            </Link>
+          ))}
+        </nav>
+      </Modal>
+    </>
   );
 }

@@ -12,11 +12,14 @@ import {
   Sparkles,
   Layers,
   Clock,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge, KnowledgeTypeBadge, ConfidenceBadge } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { offlineSources } from '@/lib/offline-demo';
 
 export default function SourceDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const id = params?.id as string;
 
@@ -24,13 +27,18 @@ export default function SourceDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user) return;
+    if (user?.id?.startsWith('demo-')) {
+      setSource(offlineSources.find(item => item.id === id) || null);
+      setLoading(false);
+      return;
+    }
     fetch(`/api/sources/${id}`)
       .then((res) => res.json())
       .then((data) => setSource(data.source))
       .catch((err) => console.error('Failed to load source:', err))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, user?.id]);
 
   if (loading) {
     return (

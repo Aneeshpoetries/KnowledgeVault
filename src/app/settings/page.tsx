@@ -20,11 +20,14 @@ import {
   EyeOff,
   AlertCircle,
   ShieldCheck,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { readDemo, writeDemo } from '@/lib/demo-store';
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<'WORKSPACE' | 'AI' | 'KNOWLEDGE' | 'SECURITY' | 'APPEARANCE'>('AI');
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
@@ -45,6 +48,15 @@ export default function SettingsPage() {
   const [pwSuccess, setPwSuccess] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
+    if (user.id.startsWith('demo-')) {
+      const settings = readDemo('settings', { provider: 'Demo Mode' as const, model: 'Local demo snapshot', temperature: '0.15' });
+      setProvider(settings.provider);
+      setModel(settings.model);
+      setTemperature(settings.temperature);
+      setLoading(false);
+      return;
+    }
     fetch('/api/settings')
       .then((res) => res.json())
       .then((data) => {
@@ -54,10 +66,14 @@ export default function SettingsPage() {
       })
       .catch((err) => console.error('Failed to load settings:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user?.id]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (user?.id?.startsWith('demo-')) {
+      setPwError('Demo workspaces do not use account passwords.');
+      return;
+    }
     setPwError(null);
     if (!currentPassword) { setPwError('Please enter your current password.'); return; }
     if (newPassword.length < 6) { setPwError('New password must be at least 6 characters.'); return; }
@@ -95,6 +111,7 @@ export default function SettingsPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (user?.id?.startsWith('demo-')) writeDemo('settings', { provider, model, temperature });
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };

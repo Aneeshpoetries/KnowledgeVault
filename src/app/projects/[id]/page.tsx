@@ -15,12 +15,16 @@ import {
   CheckCircle2,
   FileText,
   AlertTriangle,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge, KnowledgeTypeBadge, ConfidenceBadge } from '@/components/ui/Badges';
 import { CoverageRing } from '@/components/ui/CoverageRing';
+import { useAuth } from '@/context/AuthContext';
+import { offlineProjects, offlineEmployees } from '@/lib/offline-demo';
+import { demoKnowledge } from '@/lib/demo-store';
 
 export default function ProjectDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const id = params?.id as string;
 
@@ -28,13 +32,19 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user) return;
+    if (user?.id?.startsWith('demo-')) {
+      const project = offlineProjects.find(item => item.id === id);
+      setData({ project: project && { ...project, knowledgeItems: demoKnowledge().filter(item => item.project?.id === id), employeeAssignments: offlineEmployees.filter(item => item.projectAssignments.some(assignment => assignment.project.name === project.name)).map(employee => ({ employee })) } });
+      setLoading(false);
+      return;
+    }
     fetch(`/api/projects/${id}`)
       .then((res) => res.json())
       .then((json) => setData(json))
       .catch((err) => console.error('Failed to load project:', err))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, user?.id]);
 
   if (loading) {
     return (

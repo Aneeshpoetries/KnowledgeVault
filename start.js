@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 'use strict';
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  KnowledgeVault AI  ·  Demo Launcher TUI
-//  Inspired by Claude Code's minimal, information-dense terminal aesthetic.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const { execSync, spawn } = require('child_process');
 const fs   = require('fs');
 const path = require('path');

@@ -8,6 +8,9 @@
 
 # next.js
 /.next/
+/.next-ui-validation/
+/scratch/dev-ui.log
+/scratch/dev-ui-error.log
 /out/
 
 # production

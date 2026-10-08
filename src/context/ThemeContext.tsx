@@ -12,17 +12,16 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'system',
-  resolvedTheme: 'dark',
+  resolvedTheme: 'light',
   setTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>('system');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setThemeState] = useState<ThemeMode>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    // Read saved preference or default to system
-    let saved: ThemeMode = 'system';
+    let saved: ThemeMode = 'light';
     try {
       const stored = localStorage.getItem('vault_theme');
       if (stored === 'light' || stored === 'dark' || stored === 'system') {

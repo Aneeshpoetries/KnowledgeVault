@@ -53,7 +53,30 @@ export function verifySessionToken(token: string): { userId: string; email: stri
   }
 }
 
+export function getOfflineDemoUser(role: UserRole): AuthUser | null {
+  const profile = DEMO_USERS[role];
+  if (!profile) return null;
+  return {
+    id: `demo-${role}`,
+    name: profile.name,
+    email: profile.email,
+    role,
+    title: profile.title,
+    avatar: profile.avatar,
+    department: profile.department,
+    employeeId: role === 'EMPLOYEE' ? 'demo-rahul' : undefined,
+    directReportIds: role === 'MANAGER' ? ['demo-rahul', 'demo-elena'] : [],
+    projectIds: [],
+    permissions: ROLE_PERMISSIONS[role],
+  };
+}
+
 export async function getCurrentUser(): Promise<AuthUser | null> {
+  const demoToken = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
+  const demoPayload = demoToken ? verifySessionToken(demoToken) : null;
+  if (demoPayload && demoPayload.userId === `demo-${demoPayload.role}` && demoPayload.email === DEMO_USERS[demoPayload.role as UserRole]?.email) {
+    return getOfflineDemoUser(demoPayload.role as UserRole);
+  }
   // Try MongoDB first (primary auth system)
   try {
     const { getMongoCurrentUser } = await import('./mongo-auth');
@@ -75,6 +98,9 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (token) {
       const payload = verifySessionToken(token);
       if (payload) {
+        if (payload.userId === `demo-${payload.role}` && payload.email === DEMO_USERS[payload.role as UserRole]?.email) {
+          return getOfflineDemoUser(payload.role as UserRole);
+        }
         targetUserId = payload.userId;
         targetEmail = payload.email;
       }

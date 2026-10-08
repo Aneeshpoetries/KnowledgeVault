@@ -11,11 +11,13 @@ import {
   LogOut,
   ChevronRight,
   TrendingDown,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge } from '@/components/ui/Badges';
 import { useAuth } from '@/context/AuthContext';
 import { AccessForbidden } from '@/components/ui/AccessForbidden';
+import { offlineEmployees } from '@/lib/offline-demo';
+import { TransferDialog } from '@/components/ui/TransferDialog';
 
 export default function ExitModeHubPage() {
   const { user } = useAuth();
@@ -23,12 +25,19 @@ export default function ExitModeHubPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (user?.id?.startsWith('demo-')) {
+      setEmployees(offlineEmployees);
+      setLoading(false);
+      return;
+    }
     fetch('/api/employees')
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error('Employee data unavailable'); return res.json(); })
       .then((data) => setEmployees(data.employees || []))
-      .catch((err) => console.error('Failed to load employees:', err))
+      .catch((err) => {
+        console.error('Failed to load employees:', err);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [user?.id]);
 
   if (user?.role === 'NEW_EMPLOYEE') {
     return (
@@ -58,12 +67,13 @@ export default function ExitModeHubPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-vault-border/60">
           <div>
             <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-vault-text">
-              Knowledge Recovery
+              Knowledge continuity
             </h1>
             <p className="text-xs sm:text-sm text-vault-muted mt-0.5">
-              Targeted offboarding interviews to recover tacit experience and eliminate single points of failure.
+              Preserve expertise with focused interviews built around the knowledge that matters.
             </p>
           </div>
+          <TransferDialog employees={filteredEmployees} />
         </div>
 
         {/* Featured Subject: Rahul Sharma (Section 26) */}

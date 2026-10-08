@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { X, ShieldCheck, Cpu, FileCheck2, UserCheck, AlertCircle } from 'lucide-react';
+import { X, ShieldCheck, Cpu, FileCheck2, UserCheck, AlertCircle } from '@/components/ui/icons';
+import { Modal } from './Modal';
 
 interface TrustModalProps {
   isOpen: boolean;
@@ -58,9 +59,10 @@ export function TrustModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-md bg-vault-surface border border-vault-border rounded-xl shadow-2xl p-6 relative">
+    <Modal open={isOpen} onClose={onClose} label="Knowledge confidence and evidence" className="vault-trust-dialog">
+      <div className="bg-vault-surface p-7 sm:p-10 relative">
         <button
+          aria-label="Close confidence details"
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-vault-muted hover:text-white hover:bg-vault-border/50 transition-colors"
         >
@@ -115,6 +117,6 @@ export function TrustModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -18,7 +18,10 @@ export async function callLLM(
 
   // ── Gemini path (preferred if GEMINI_API_KEY is set) ─────────────────────
   if (geminiKey && geminiKey.trim().length > 0 && !geminiKey.includes('your-key')) {
-    const model = process.env.LLM_MODEL || 'gemini-2.0-flash';
+    const configuredModel = process.env.LLM_MODEL;
+    const model = !configuredModel || configuredModel === 'gemini-2.0-flash'
+      ? 'gemini-3.8-flash'
+      : configuredModel;
     // Gemini's OpenAI-compatible endpoint
     const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/openai';
 

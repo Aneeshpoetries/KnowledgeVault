@@ -1,20 +1,23 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import '@fontsource-variable/inter';
 import './globals.css';
+import './workspace.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
-
-// next/font/google handles preloading automatically — no blocking, no onLoad hacks needed
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-  variable: '--font-inter',
-});
+import { WorkspaceRoot } from '@/components/layout/AppShell';
 
 export const metadata: Metadata = {
   title: 'KnowledgeVault AI | AI Knowledge Continuity System',
   description: 'Turn employee experience into a living, searchable organizational memory.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
@@ -23,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Theme script — runs before paint to prevent flash */}
         <script
@@ -53,7 +56,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="bg-[var(--vault-bg)] text-vault-text antialiased font-sans">
         <ThemeProvider>
           <AuthProvider>
-            {children}
+            <WorkspaceRoot>{children}</WorkspaceRoot>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -11,19 +11,29 @@ import {
   LogOut,
   HelpCircle,
   Plus,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { offlineGaps } from '@/lib/offline-demo';
+import { demoGaps, saveDemoGaps } from '@/lib/demo-store';
 
 export default function KnowledgeGapsPage() {
+  const { user } = useAuth();
   const [gaps, setGaps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const fetchGaps = async () => {
     setLoading(true);
+    if (user?.id?.startsWith('demo-')) {
+      setGaps(demoGaps());
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch('/api/gaps');
+      if (!res.ok) throw new Error('Gap data unavailable');
       const data = await res.json();
       setGaps(data.gaps || []);
     } catch (err) {
@@ -34,11 +44,18 @@ export default function KnowledgeGapsPage() {
   };
 
   useEffect(() => {
-    fetchGaps();
-  }, []);
+    if (user) fetchGaps();
+  }, [user?.id]);
 
   const handleGenerateQuestions = async (gapId: string) => {
     setGeneratingId(gapId);
+    if (user?.id?.startsWith('demo-')) {
+      const next = demoGaps().map(gap => gap.id === gapId ? { ...gap, suggestedQuestionsJson: JSON.stringify([`What happens when ${gap.title.toLowerCase()} occurs?`, 'Which checks come first, and who verifies recovery?']) } : gap);
+      saveDemoGaps(next);
+      setGaps(next);
+      setGeneratingId(null);
+      return;
+    }
     try {
       const res = await fetch('/api/gaps', {
         method: 'POST',
@@ -79,7 +96,7 @@ export default function KnowledgeGapsPage() {
     return (
       <div
         key={gap.id}
-        className="p-4 rounded-xl bg-vault-surface border border-vault-border space-y-3 vault-hover-row"
+        className="p-6 rounded-3xl bg-vault-surface border border-vault-border space-y-4 vault-hover-row"
       >
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
           <div>
@@ -94,11 +111,11 @@ export default function KnowledgeGapsPage() {
 
           <div className="flex items-center gap-2 shrink-0">
             <Link
-              href="/exit-mode"
+              href={`/exit-mode?focus=${encodeURIComponent(gap.title)}`}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
             >
               <LogOut className="w-3 h-3" />
-              <span>Interview in Exit Mode</span>
+              <span>Investigate with an interview</span>
             </Link>
           </div>
         </div>
@@ -107,7 +124,7 @@ export default function KnowledgeGapsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-vault-border/60 text-xs">
           <div>
             <span className="text-[10px] font-mono uppercase tracking-wider text-vault-dim block mb-0.5">
-              Why Missing
+              Why it matters
             </span>
             <p className="text-vault-muted leading-relaxed">
               {gap.description ||

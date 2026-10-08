@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FileText, Users, MessageSquare, Terminal, AlertCircle } from 'lucide-react';
+import { FileText, Users, MessageSquare, Terminal, AlertCircle } from '@/components/ui/icons';
 
 interface SourceChipProps {
   id?: string;

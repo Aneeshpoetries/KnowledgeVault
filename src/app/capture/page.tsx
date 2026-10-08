@@ -15,14 +15,17 @@ import {
   Plus,
   Brain,
   Check,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge, KnowledgeTypeBadge, ConfidenceBadge } from '@/components/ui/Badges';
 import { ExtractedKnowledgeItemDTO } from '@/lib/types';
+import { useAuth } from '@/context/AuthContext';
+import { captureDemo } from '@/lib/demo-store';
 
 type CaptureTab = 'UPLOAD' | 'PASTE' | 'TELL_AI';
 
 export default function CapturePage() {
+  const { user } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,6 +65,15 @@ export default function CapturePage() {
 
   const handleFileUpload = async (uploadedFile: File) => {
     setFile(uploadedFile);
+    if (user?.id?.startsWith('demo-')) {
+      if (!/\.(txt|md|csv|json)$/i.test(uploadedFile.name)) {
+        alert('The local demo accepts text, Markdown, CSV, and JSON files.');
+        return;
+      }
+      const item = captureDemo(await uploadedFile.text(), uploadedFile.name, 'DOCUMENT', user.name);
+      setExtractedItems([item]);
+      return;
+    }
     setProcessing(true);
     setPipelineStep(processingSteps[0]);
 
@@ -110,6 +122,11 @@ export default function CapturePage() {
     e.preventDefault();
     if (!pasteText.trim() || processing) return;
 
+    if (user?.id?.startsWith('demo-')) {
+      setExtractedItems([captureDemo(pasteText, pasteTitle || 'Manual Operational Note', 'NOTES', user.name)]);
+      return;
+    }
+
     setProcessing(true);
     setPipelineStep('Ingesting text stream...');
 
@@ -145,6 +162,13 @@ export default function CapturePage() {
     setChatInput('');
     setChatLoading(true);
 
+    if (user?.id?.startsWith('demo-')) {
+      setCapturedProposal({ title: text.trim().slice(0, 68), summary: text.trim(), content: text.trim(), risk: 'HIGH' });
+      setChatMessages([...nextMessages, { role: 'assistant', content: 'I found an operational memory to preserve. Review the proposed record below.' }]);
+      setChatLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/ai/conversational-capture', {
         method: 'POST',
@@ -174,6 +198,12 @@ export default function CapturePage() {
 
   const handleCommitProposal = async () => {
     if (!capturedProposal) return;
+    if (user?.id?.startsWith('demo-')) {
+      captureDemo(capturedProposal.content || capturedProposal.summary, capturedProposal.title, 'INTERVIEW', user.name);
+      setSavedSuccess(true);
+      setTimeout(() => router.push('/knowledge'), 800);
+      return;
+    }
     setProcessing(true);
     try {
       const res = await fetch('/api/knowledge/process', {

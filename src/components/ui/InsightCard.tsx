@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, AlertTriangle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Sparkles, AlertTriangle, ArrowRight, ShieldCheck } from '@/components/ui/icons';
 import Link from 'next/link';
 
 interface InsightCardProps {

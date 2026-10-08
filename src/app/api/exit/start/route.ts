@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { employeeId } = body;
+    const focus = typeof body.focus === 'string' ? body.focus.trim().slice(0, 1200) : '';
 
     if (!employeeId) {
       return NextResponse.json({ error: 'employeeId is required' }, { status: 400 });
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
         data: [
           {
             sessionId: session.id,
-            question: 'I found strong documentation around architecture and deployment checklists, but very little about production troubleshooting. What usually breaks during high-volume billing deployment?',
+            question: focus ? `Let’s preserve this knowledge: ${focus} What are the key dependencies, failure modes, and recovery steps the next person should understand?` : 'I found strong documentation around architecture and deployment checklists, but very little about production troubleshooting. What usually breaks during high-volume billing deployment?',
             category: 'Troubleshooting',
             rationale: 'Troubleshooting coverage is currently in the critical zone. Single point of failure recovery.',
             priority: 'CRITICAL',

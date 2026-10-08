@@ -20,18 +20,21 @@ import {
   RotateCcw,
   User,
   Check,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { CoverageRing } from '@/components/ui/CoverageRing';
 import { RiskBadge, ConfidenceBadge } from '@/components/ui/Badges';
 import { AccessForbidden } from '@/components/ui/AccessForbidden';
 import { useAuth } from '@/context/AuthContext';
+import { offlineEmployees } from '@/lib/offline-demo';
+import { readDemo, writeDemo } from '@/lib/demo-store';
 
 export default function EmployeeExitModeInterviewPage() {
   const params = useParams();
   const router = useRouter();
   const employeeId = params?.employeeId as string;
   const { user } = useAuth();
+  const offlineDemo = user?.id?.startsWith('demo-') && employeeId?.startsWith('demo-');
 
   const [loading, setLoading] = useState(true);
   const [employee, setEmployee] = useState<any>(null);
@@ -40,10 +43,12 @@ export default function EmployeeExitModeInterviewPage() {
   const [answerInput, setAnswerInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [recoveredItems, setRecoveredItems] = useState<any[]>([]);
+  const [demoTranscript, setDemoTranscript] = useState<{ question: string; answer: string }[]>([]);
   const [completedReport, setCompletedReport] = useState<any>(null);
   const [lastExtractedTitle, setLastExtractedTitle] = useState<string | null>(null);
   const [isForbidden, setIsForbidden] = useState(false);
   const [forbiddenMessage, setForbiddenMessage] = useState('');
+  const [transferFocus, setTransferFocus] = useState('');
 
   // High-fidelity realistic expert responses for 1-click evaluation
   const demoAnswers: Record<number, string> = {
@@ -61,7 +66,26 @@ export default function EmployeeExitModeInterviewPage() {
 
   useEffect(() => {
     async function initSession() {
-      if (!employeeId) return;
+      if (!employeeId || !user) return;
+      const focus = new URLSearchParams(window.location.search).get('focus')?.slice(0, 1200) || '';
+      setTransferFocus(focus);
+      if (offlineDemo) {
+        const questions = [
+          { id: 'demo-q1', order: 1, category: 'Troubleshooting', question: 'What should the team check before restarting the payment service during peak billing?', rationale: 'The existing runbook omits the timeout and Redis checks.' },
+          { id: 'demo-q2', order: 2, category: 'Failover', question: 'How do you switch to the backup payment gateway if the primary stops responding?', rationale: 'Failover handling is a critical knowledge gap.' },
+          { id: 'demo-q3', order: 3, category: 'Incident Ops', question: 'What caused the midnight settlement connection pool failure?', rationale: 'The current deployment guide has no pool sizing guidance.' },
+        ];
+        if (focus) questions[0] = { ...questions[0], question: `Let’s preserve this knowledge: ${focus} What are the key dependencies, failure modes, and recovery steps the next person should understand?`, rationale: 'Selected knowledge-transfer focus.' };
+        setEmployee(offlineEmployees.find((e) => e.id === employeeId) || offlineEmployees[0]);
+        const saved = focus ? null : readDemo<any>(`exit-${employeeId}`, null);
+        setSession(saved?.session || { id: 'demo-session', initialCoverage: 54, itemsRecovered: 0, questions });
+        setCurrentQuestion(saved?.currentQuestion || (saved?.completedReport ? null : questions[0]));
+        setRecoveredItems(saved?.recoveredItems || []);
+        setDemoTranscript(saved?.transcript || []);
+        setCompletedReport(saved?.completedReport || null);
+        setLoading(false);
+        return;
+      }
       try {
         const empRes = await fetch(`/api/employees/${employeeId}`);
         const empData = await empRes.json();
@@ -70,7 +94,7 @@ export default function EmployeeExitModeInterviewPage() {
         const sessRes = await fetch('/api/exit/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ employeeId }),
+          body: JSON.stringify({ employeeId, focus }),
         });
 
         if (sessRes.status === 403) {
@@ -94,7 +118,7 @@ export default function EmployeeExitModeInterviewPage() {
       }
     }
     initSession();
-  }, [employeeId]);
+  }, [employeeId, user?.id, offlineDemo]);
 
   const handleSubmitAnswer = async (overrideText?: string) => {
     const textToSubmit = overrideText || answerInput;
@@ -102,6 +126,27 @@ export default function EmployeeExitModeInterviewPage() {
 
     setSubmitting(true);
     setLastExtractedTitle(null);
+
+    if (offlineDemo) {
+      const order = currentQuestion.order || 1;
+      const title = ['Peak Billing Timeout & Redis Check', 'Backup Gateway Switchover', 'Midnight PgBouncer Pool Sizing'][order - 1];
+      const createdItem = { id: `demo-recovered-${order}`, title, confidence: 0.92 };
+      const newCoverage = Math.min(78, 54 + order * 8);
+      setRecoveredItems((prev) => [createdItem, ...prev]);
+      const transcript = [...demoTranscript, { question: currentQuestion.question, answer: textToSubmit.trim() }];
+      const allRecovered = [createdItem, ...recoveredItems];
+      const nextQuestion = order < session.questions.length ? session.questions[order] : null;
+      const report = nextQuestion ? null : { employee: employee?.name, initialCoverage: 54, finalCoverage: newCoverage, recoveredItems: allRecovered, answers: transcript };
+      writeDemo(`exit-${employeeId}`, { session: { ...session, finalCoverage: newCoverage, itemsRecovered: order }, currentQuestion: nextQuestion, recoveredItems: allRecovered, transcript, completedReport: report });
+      setDemoTranscript(transcript);
+      setLastExtractedTitle(title);
+      setSession((prev: any) => ({ ...prev, finalCoverage: newCoverage, itemsRecovered: order }));
+      setAnswerInput('');
+      if (nextQuestion) setCurrentQuestion(nextQuestion);
+      else setCompletedReport(report);
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/exit/answer', {
@@ -216,7 +261,8 @@ export default function EmployeeExitModeInterviewPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* LEFT / MAIN COLUMN: Calm AI Knowledge Interview (cols 8) */}
             <div className="lg:col-span-8 space-y-4">
-              <div className="p-6 rounded-xl bg-vault-surface border border-vault-border space-y-5">
+              <div className="p-6 sm:p-9 rounded-3xl bg-vault-surface border border-vault-border space-y-6">
+                {transferFocus && <div className="p-4 rounded-2xl bg-vault-subtle text-xs text-vault-muted"><strong className="text-vault-text">Interview focus</strong><p className="mt-2 leading-relaxed">{transferFocus}</p></div>}
                 {/* Interview Stage Bar */}
                 <div className="flex items-center justify-between pb-3 border-b border-vault-border/60 text-xs">
                   <div className="flex items-center gap-2">

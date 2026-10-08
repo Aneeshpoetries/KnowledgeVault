@@ -2,22 +2,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Modal } from './Modal';
 import {
   Search,
   Bot,
   Network,
   ShieldAlert,
-  PieChart,
   LogOut,
   Upload,
   Brain,
   FolderGit2,
   Users,
-  Layers,
   ArrowRight,
   FileText,
-  Command,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -185,10 +183,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        if (isOpen) onClose();
-      }
       if (e.key === 'Escape' && isOpen) {
         onClose();
       }
@@ -235,10 +229,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   ];
 
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-150"
-    >
+    <Modal open={isOpen} onClose={onClose} label="Search organizational memory" className="vault-command-dialog">
       <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-xl bg-vault-surface border border-vault-border rounded-xl shadow-elevated overflow-hidden animate-in zoom-in-95 duration-150"
@@ -285,14 +276,15 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                       const isSelected = itemIdx === selectedIndex;
 
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={item.id}
                           onClick={() => {
                             onClose();
                             router.push(item.path);
                           }}
                           onMouseEnter={() => setSelectedIndex(itemIdx)}
-                          className={`flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${
+                          className={`w-full text-left flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${
                             isSelected
                               ? 'bg-vault-subtle text-vault-text'
                               : 'text-vault-muted hover:text-vault-text hover:bg-vault-subtle/50'
@@ -314,7 +306,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                           <div className="flex items-center gap-1.5 text-vault-dim shrink-0 ml-2">
                             {isSelected && <ArrowRight className="w-3.5 h-3.5 text-indigo-400" />}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -334,6 +326,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
           <span>KnowledgeVault v1.0</span>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

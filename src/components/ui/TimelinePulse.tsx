@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, CheckCircle2, AlertTriangle, FileText, ArrowRight } from 'lucide-react';
+import { Sparkles, CheckCircle2, AlertTriangle, FileText, ArrowRight } from '@/components/ui/icons';
 
 interface PulseEvent {
   id: string;
@@ -25,7 +25,7 @@ const DEFAULT_DAYS: DayPulse[] = [
     date: 'Sep 22',
     active: true,
     events: [
-      { id: '1', type: 'source', title: '3 sources processed', detail: 'Ingested Slack #infra-incidents & post-mortem archive', time: '09:14' },
+      { id: '1', type: 'source', title: '3 sources processed', detail: 'Processed incident transcripts and the post-mortem archive', time: '09:14' },
       { id: '2', type: 'capture', title: '+8 knowledge items', detail: 'Extracted automated failover & Redis queue guidelines', time: '11:30' },
     ],
   },
@@ -86,11 +86,11 @@ export function TimelinePulse() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-mono uppercase tracking-wider text-vault-dim">
-            Memory Pulse
+            Memory activity
           </span>
-          <span className="text-[11px] text-vault-muted">· Activity across operational window</span>
+          <span className="text-[11px] text-vault-muted">· Example activity</span>
         </div>
-        <span className="text-[11px] text-vault-dim font-mono">7-day timeline</span>
+        <span className="text-[11px] text-vault-dim font-mono">Sample week</span>
       </div>
 
       {/* Horizontal timeline bar */}
@@ -108,6 +108,7 @@ export function TimelinePulse() {
                 key={d.day}
                 type="button"
                 onClick={() => setSelectedDay(d)}
+                aria-pressed={isSelected} aria-label={`${d.day}, ${d.events.length} events`}
                 className={`flex flex-col items-center p-2 rounded-lg transition-all group ${
                   isSelected
                     ? 'bg-vault-subtle border border-vault-border/80 shadow-subtle'
@@ -124,13 +125,13 @@ export function TimelinePulse() {
                     className={`w-3 h-3 rounded-full border transition-all ${
                       hasEvents
                         ? isSelected
-                          ? 'bg-indigo-500 border-indigo-300 scale-125 shadow-glowIndigo'
-                          : 'bg-vault-surface border-cyan-500 group-hover:border-cyan-400 group-hover:scale-110'
+                          ? 'bg-[var(--accent-indigo)] border-[var(--accent-indigo)] scale-110'
+                          : 'bg-vault-surface border-vault-border-hover group-hover:scale-110'
                         : 'bg-vault-surface border-vault-border'
                     }`}
                   />
                   {hasEvents && !isSelected && (
-                    <span className="absolute w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping opacity-40 pointer-events-none" />
+                    <span className="absolute w-1.5 h-1.5 rounded-full bg-[var(--accent-indigo)] opacity-40 pointer-events-none" />
                   )}
                 </div>
 

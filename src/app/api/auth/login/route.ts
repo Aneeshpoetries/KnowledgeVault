@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { UserRole } from '@/lib/types';
 import { ROLE_PERMISSIONS } from '@/lib/rbac';
-import { logAudit, DEMO_USERS, signSessionToken } from '@/lib/auth';
+import { logAudit, DEMO_USERS, getOfflineDemoUser, signSessionToken } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
@@ -132,6 +132,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Persona previews use a signed local snapshot and never wait for a database login.
+    if (role && DEMO_ROLES.includes(role) && !email && !password) {
+      const demoUser = getOfflineDemoUser(role)!;
+      const cookieStore = await cookies();
+      cookieStore.set('vault_session_token', signSessionToken({ userId: demoUser.id, email: demoUser.email, role }), {
+        path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24,
+      });
+      cookieStore.delete('kv_session_email');
+      return NextResponse.json({ success: true, user: { ...demoUser, isDemo: true } });
+    }
+
     // 1. Try MongoDB (primary)
     const mongoUser = await tryMongoLogin(role, email, password);
     if (mongoUser) {
@@ -149,7 +160,18 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Fallback: Prisma SQLite (when MongoDB is unreachable)
-    const prismaResult = await tryPrismaLogin(role, email, password);
+    let prismaResult;
+    try {
+      prismaResult = await tryPrismaLogin(role, email, password);
+    } catch (error) {
+      const demoUser = role && !email && !password && getOfflineDemoUser(role);
+      if (!demoUser) throw error;
+      const cookieStore = await cookies();
+      cookieStore.set('vault_session_token', signSessionToken({ userId: demoUser.id, email: demoUser.email, role }), {
+        path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24,
+      });
+      return NextResponse.json({ success: true, user: { ...demoUser, isDemo: true } });
+    }
     if ('error' in prismaResult) {
       return NextResponse.json({ error: prismaResult.error }, { status: prismaResult.status });
     }

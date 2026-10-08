@@ -1,0 +1,767 @@
+.kv-assistant {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 116px);
+  min-height: 500px;
+  color: var(--vault-text);
+}
+.kv-assistant-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+  flex: none;
+}
+.kv-assistant-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--vault-dim);
+  letter-spacing: 0.025em;
+}
+.kv-assistant-top h1 {
+  margin: 5px 0 4px;
+}
+.kv-assistant-top p {
+  color: var(--vault-muted);
+  font-size: 13px;
+}
+.kv-assistant-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kv-assistant-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--vault-surface);
+  border: 1px solid var(--vault-border);
+  border-radius: 12px;
+}
+.kv-assistant-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 22px;
+  border-bottom: 1px solid var(--vault-border);
+  color: var(--vault-dim);
+  font-size: 11px;
+  flex: none;
+}
+.kv-assistant-context > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--vault-muted);
+}
+.kv-assistant-context svg {
+  color: var(--accent-indigo);
+}
+.kv-assistant-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: min(730px, calc(100% - 64px));
+  margin: auto;
+  padding: 28px 0;
+}
+.kv-assistant-orb {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-indigo-bg);
+  border: 1px solid var(--accent-indigo-border);
+  color: var(--accent-indigo);
+  border-radius: 14px;
+  margin-bottom: 22px;
+}
+.kv-assistant-welcome h2 {
+  font-size: clamp(27px, 2.7vw, 38px);
+  line-height: 1.18;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  margin: 10px 0 12px;
+}
+.kv-assistant-welcome > p {
+  max-width: 520px;
+  font-size: 14px;
+  color: var(--vault-muted);
+  line-height: 1.7;
+}
+.kv-assistant-prompts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-top: 28px;
+}
+.kv-assistant-prompts button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--vault-border);
+  border-radius: 10px;
+  text-align: left;
+  background: var(--vault-bg);
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    transform 0.18s;
+}
+.kv-assistant-prompts button:hover {
+  background: var(--vault-subtle);
+  border-color: var(--vault-border-hover);
+  transform: translateY(-1px);
+}
+.kv-assistant-prompts button > svg {
+  color: var(--vault-dim);
+  flex: none;
+}
+.kv-assistant-prompts button > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kv-assistant-prompts button > span:last-child {
+  color: var(--vault-dim);
+  margin-left: auto;
+}
+.kv-assistant-prompts strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.kv-assistant-prompts small {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--vault-dim);
+}
+.kv-assistant-composer-wrap {
+  flex: none;
+  width: min(850px, calc(100% - 48px));
+  margin: 18px auto 16px;
+}
+.kv-assistant-composer {
+  border: 1px solid var(--vault-border-hover);
+  border-radius: 12px;
+  background: var(--vault-surface);
+  box-shadow: var(--shadow-card);
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+.kv-assistant-composer:focus-within {
+  border-color: var(--accent-indigo);
+  box-shadow: 0 0 0 3px var(--accent-indigo-bg);
+}
+.kv-assistant-composer textarea {
+  width: 100%;
+  height: 74px;
+  max-height: 150px;
+  padding: 15px 17px 6px;
+  border: 0;
+  outline: none !important;
+  resize: vertical;
+  background: transparent;
+  color: var(--vault-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.kv-assistant-composer textarea::placeholder {
+  color: var(--vault-dim);
+}
+.kv-assistant-composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 11px 10px 17px;
+}
+.kv-assistant-composer-footer > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--vault-dim);
+}
+.kv-assistant-composer-footer > button {
+  border-radius: 8px;
+}
+.kv-assistant-composer-wrap > p {
+  font-size: 11px;
+  color: var(--vault-dim);
+  margin-top: 10px;
+  text-align: center;
+}
+.kv-assistant-composer-wrap > p > span {
+  margin-left: 12px;
+}
+.kv-assistant-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 30px max(24px, calc((100% - 850px) / 2));
+  scrollbar-gutter: stable;
+}
+.kv-assistant-user {
+  align-self: flex-end;
+  max-width: 80%;
+  padding: 12px 16px;
+  border: 1px solid var(--vault-border);
+  border-radius: 12px 12px 3px 12px;
+  background: var(--vault-subtle);
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.kv-assistant-answer {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  animation: kv-answer-enter 0.22s ease-out;
+}
+.kv-assistant-answer > div:last-child {
+  flex: 1;
+  min-width: 0;
+}
+.kv-assistant-answer-mark {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--vault-border);
+  background: var(--vault-bg);
+  border-radius: 9px;
+  color: var(--accent-indigo);
+  flex: none;
+}
+.kv-assistant-answer .kv-assistant-eyebrow {
+  color: var(--vault-muted);
+  font-weight: 600;
+}
+.kv-answer-markdown {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--vault-text);
+  overflow-wrap: anywhere;
+  margin: 10px 0 18px;
+}
+.kv-answer-markdown p + p {
+  margin-top: 14px;
+}
+.kv-answer-markdown :is(h1, h2, h3, h4) {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 20px 0 10px;
+}
+.kv-answer-markdown :is(ul, ol) {
+  padding-left: 22px;
+  margin: 12px 0;
+}
+.kv-answer-markdown ul {
+  list-style: disc;
+}
+.kv-answer-markdown ol {
+  list-style: decimal;
+}
+.kv-answer-markdown li + li {
+  margin-top: 8px;
+}
+.kv-answer-markdown strong {
+  font-weight: 600;
+}
+.kv-answer-markdown a {
+  color: var(--accent-indigo);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.kv-answer-markdown blockquote {
+  padding: 8px 16px;
+  border-left: 2px solid var(--accent-indigo);
+  color: var(--vault-muted);
+  margin: 16px 0;
+}
+.kv-answer-markdown :not(pre) > code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--vault-subtle);
+  border: 1px solid var(--vault-border);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.kv-code-block {
+  margin: 16px 0;
+  border: 1px solid var(--vault-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--vault-bg);
+}
+.kv-code-block > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px 5px 16px;
+  border-bottom: 1px solid var(--vault-border);
+  font-size: 12px;
+  color: var(--vault-dim);
+}
+.kv-code-block pre {
+  padding: 16px;
+  overflow-x: auto;
+  font:
+    13px/1.7 ui-monospace,
+    Consolas,
+    monospace;
+}
+.kv-answer-table {
+  overflow-x: auto;
+}
+.kv-answer-table table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 0 !important;
+}
+.kv-answer-table :is(th, td) {
+  border: 1px solid var(--vault-border);
+  padding: 8px 12px;
+}
+.kv-assistant-why {
+  padding: 11px 14px;
+  border: 1px solid var(--vault-border);
+  background: var(--vault-bg);
+  border-radius: 8px;
+  margin-bottom: 18px;
+  font-size: 12px;
+}
+.kv-assistant-why summary {
+  color: var(--vault-muted);
+  cursor: pointer;
+  font-weight: 500;
+}
+.kv-assistant-why p {
+  color: var(--vault-muted);
+  margin-top: 10px;
+  line-height: 1.7;
+}
+.kv-assistant-source-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+}
+.kv-assistant-source-list button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--vault-border);
+  background: var(--vault-surface);
+  color: var(--vault-muted);
+  font-size: 12px;
+}
+.kv-assistant-source-list button:hover {
+  background: var(--vault-subtle);
+}
+.kv-assistant-source-list button small {
+  color: var(--vault-dim);
+}
+.kv-assistant-answer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  color: var(--vault-dim);
+  font-size: 11px;
+  margin-top: 14px;
+}
+.kv-assistant-answer-meta svg {
+  color: var(--accent-emerald);
+}
+.kv-answer-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+.kv-answer-actions .kv-ui-button {
+  font-size: 11px;
+  padding-inline: 8px;
+}
+.kv-assistant-gap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent-amber) 25%, transparent);
+  background: color-mix(in srgb, var(--accent-amber) 5%, transparent);
+  border-radius: 9px;
+  color: var(--accent-amber);
+  margin: 14px 0;
+  font-size: 13px;
+}
+.kv-assistant-gap > svg {
+  flex: none;
+  margin-top: 2px;
+}
+.kv-assistant-gap strong {
+  font-weight: 500;
+}
+.kv-assistant-gap p {
+  font-size: 12px;
+  line-height: 1.65;
+  margin: 5px 0 9px;
+  color: var(--vault-muted);
+}
+.kv-assistant-gap a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+.kv-assistant-thinking {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: var(--vault-dim);
+  font-size: 13px;
+}
+.kv-assistant-thinking i {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  background: var(--vault-dim);
+  border-radius: 50%;
+  margin-left: 4px;
+  animation: kv-dot 1s infinite;
+}
+.kv-assistant-thinking i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.kv-assistant-thinking i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.kv-evidence-sheet {
+  position: fixed;
+  width: min(420px, calc(100% - 24px));
+  margin: 12px 12px 12px auto;
+  max-height: calc(100dvh - 24px);
+  height: calc(100dvh - 24px);
+  border-radius: 14px;
+}
+.kv-evidence-sheet-head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background: var(--vault-elevated);
+  border-bottom: 1px solid var(--vault-border);
+  z-index: 1;
+}
+.kv-evidence-sheet-head > span {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+}
+.kv-evidence-sheet-body {
+  padding: 26px;
+}
+.kv-evidence-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-emerald);
+  font-size: 12px;
+}
+.kv-evidence-sheet-body h2 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  margin: 22px 0 9px;
+  line-height: 1.3;
+}
+.kv-evidence-type {
+  color: var(--vault-dim);
+  font-size: 12px;
+}
+.kv-evidence-sheet blockquote {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--vault-muted);
+  padding: 20px;
+  background: var(--vault-bg);
+  border: 1px solid var(--vault-border);
+  border-radius: 10px;
+  margin: 25px 0;
+}
+.kv-evidence-sheet dl {
+  border-block: 1px solid var(--vault-border);
+  margin-bottom: 24px;
+}
+.kv-evidence-sheet dl > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 0;
+  font-size: 13px;
+}
+.kv-evidence-sheet dt {
+  color: var(--vault-dim);
+}
+.kv-evidence-sheet h3 {
+  font-size: 12px;
+  color: var(--vault-dim);
+  font-weight: 500;
+}
+.kv-evidence-sheet section {
+  margin-bottom: 26px;
+}
+.kv-evidence-sheet section > a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--vault-border);
+}
+.kv-history-dialog {
+  width: min(600px, calc(100% - 32px));
+  padding: 22px;
+}
+.kv-history-dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--vault-border);
+}
+.kv-history-dialog h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.kv-history-dialog p {
+  color: var(--vault-dim);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.kv-history-dialog > div > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 10px;
+  border-bottom: 1px solid var(--vault-border);
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+}
+.kv-history-dialog > div > button:hover,
+.kv-history-dialog [aria-current="true"] {
+  background: var(--vault-subtle);
+}
+.kv-history-dialog button > span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kv-history-dialog button > small {
+  color: var(--vault-dim);
+  white-space: nowrap;
+}
+.kv-history-empty {
+  padding: 25px 0;
+}
+@keyframes kv-dot {
+  50% {
+    opacity: 0.2;
+  }
+}
+@keyframes kv-answer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-height: 780px) and (min-width: 801px) {
+  .kv-assistant-welcome {
+    padding: 16px 0;
+  }
+  .kv-assistant-orb {
+    margin-bottom: 12px;
+    width: 38px;
+    height: 38px;
+  }
+  .kv-assistant-welcome > p {
+    font-size: 13px;
+  }
+  .kv-assistant-prompts {
+    margin-top: 18px;
+  }
+  .kv-assistant-prompts button {
+    padding: 12px;
+  }
+  .kv-assistant-composer textarea {
+    height: 57px;
+  }
+  .kv-assistant-top {
+    margin-bottom: 15px;
+  }
+}
+@media (max-width: 900px) {
+  .kv-assistant-top {
+    align-items: flex-start;
+  }
+  .kv-assistant-toolbar {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .kv-assistant-context > span:last-child {
+    display: none;
+  }
+  .kv-assistant-welcome {
+    width: calc(100% - 40px);
+  }
+  .kv-assistant-prompts button {
+    padding: 13px;
+    gap: 9px;
+  }
+  .kv-assistant-prompts small {
+    font-size: 11px;
+  }
+}
+@media (max-width: 767px) {
+  .kv-assistant {
+    height: auto;
+    min-height: calc(100dvh - 180px);
+  }
+  .kv-assistant-top {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .kv-assistant-toolbar {
+    justify-content: flex-start;
+  }
+  .kv-assistant-main {
+    min-height: 610px;
+  }
+  .kv-assistant-context {
+    padding: 12px 16px;
+  }
+  .kv-assistant-welcome {
+    padding: 30px 0;
+  }
+  .kv-assistant-prompts {
+    grid-template-columns: 1fr;
+    margin-top: 22px;
+  }
+  .kv-assistant-prompts button {
+    min-height: 64px;
+  }
+  .kv-assistant-composer-wrap {
+    width: calc(100% - 24px);
+    margin-bottom: 14px;
+  }
+  .kv-assistant-composer-wrap > p > span {
+    display: none;
+  }
+  .kv-assistant-composer textarea {
+    font-size: 16px;
+  }
+  .kv-assistant-messages {
+    max-height: 60dvh;
+    padding: 22px 16px;
+    gap: 24px;
+  }
+  .kv-assistant-user {
+    max-width: 92%;
+  }
+  .kv-assistant-answer {
+    gap: 10px;
+  }
+  .kv-answer-markdown {
+    font-size: 14px;
+  }
+  .kv-evidence-sheet {
+    height: auto;
+    max-height: 85dvh;
+    width: calc(100% - 24px);
+    margin: auto 12px 12px;
+  }
+  .kv-history-dialog button > small {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kv-assistant * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (max-width: 767px) {
+  .kv-assistant {
+    height: calc(100dvh - 174px);
+    min-height: 480px;
+  }
+  .kv-assistant-main {
+    min-height: 0;
+  }
+  .kv-assistant-welcome {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    width: 100%;
+    margin: 0;
+    padding: 24px 20px;
+  }
+  .kv-assistant-welcome > * {
+    flex-shrink: 0;
+  }
+  .kv-assistant-orb {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 16px;
+  }
+  .kv-assistant-welcome h2 {
+    font-size: 27px;
+  }
+  .kv-assistant-welcome > p {
+    font-size: 13px;
+  }
+  .kv-assistant-prompts {
+    margin-top: 20px;
+  }
+  .kv-assistant-prompts button {
+    min-height: 60px;
+  }
+  .kv-assistant-composer-wrap {
+    margin-top: 12px;
+  }
+  .kv-assistant-composer textarea {
+    height: 60px;
+  }
+  .kv-assistant-messages {
+    max-height: none;
+  }
+}

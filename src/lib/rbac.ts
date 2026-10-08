@@ -49,6 +49,7 @@ export interface AuthUser {
   directReportIds: string[];
   projectIds: string[];
   permissions: Permission[];
+  isDemo?: boolean;
 }
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldAlert, ArrowLeft, UserCheck } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, UserCheck } from '@/components/ui/icons';
 import { useAuth } from '@/context/AuthContext';
 
 interface AccessForbiddenProps {

@@ -12,21 +12,30 @@ import {
   Plus,
   ChevronRight,
   CheckCircle2,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { ConfidenceBadge } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { offlineSources } from '@/lib/offline-demo';
 
 export default function SourcesPage() {
+  const { user } = useAuth();
   const [sources, setSources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
+    if (user.id.startsWith('demo-')) {
+      setSources(offlineSources);
+      setLoading(false);
+      return;
+    }
     fetch('/api/sources')
       .then((res) => res.json())
       .then((data) => setSources(data.sources || []))
       .catch((err) => console.error('Failed to load sources:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   return (
     <AppShell>

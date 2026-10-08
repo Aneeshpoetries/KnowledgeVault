@@ -15,11 +15,19 @@ import {
   Sparkles,
   RefreshCw,
   FileText,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/context/AuthContext';
 import { AccessForbidden } from '@/components/ui/AccessForbidden';
 import { RiskBadge, TypeBadge } from '@/components/ui/Badges';
+import { offlineKnowledge } from '@/lib/offline-demo';
+import { demoReviews, saveDemoReviews } from '@/lib/demo-store';
+
+const demoReviewItems = offlineKnowledge.map((item, index) => ({
+  ...item,
+  status: 'PENDING_REVIEW',
+  createdAt: `2026-10-0${7 - index}T09:00:00.000Z`,
+}));
 
 export default function ReviewsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -36,6 +44,11 @@ export default function ReviewsPage() {
 
   const fetchReviewItems = async () => {
     setLoading(true);
+    if (user?.id?.startsWith('demo-')) {
+      setItems(demoReviews());
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch('/api/reviews');
       const data = await res.json();
@@ -60,6 +73,14 @@ export default function ReviewsPage() {
   const handleApprove = async (id: string, title: string) => {
     setProcessingId(id);
     setMessage(null);
+    if (user?.id?.startsWith('demo-')) {
+      const next = demoReviews().filter(item => item.id !== id);
+      saveDemoReviews(next);
+      setItems(next);
+      setMessage({ type: 'success', text: `Approved and indexed "${title}" into organizational memory.` });
+      setProcessingId(null);
+      return;
+    }
     try {
       const res = await fetch(`/api/reviews/${id}`, {
         method: 'POST',
@@ -89,6 +110,21 @@ export default function ReviewsPage() {
 
     setProcessingId(activeModal.itemId);
     setMessage(null);
+    if (user?.id?.startsWith('demo-')) {
+      const next = demoReviews().filter(item => item.id !== activeModal.itemId);
+      saveDemoReviews(next);
+      setItems(next);
+      setMessage({
+        type: 'success',
+        text: activeModal.action === 'REQUEST_CHANGES'
+          ? `Changes requested for "${activeModal.itemTitle}".`
+          : `Rejected "${activeModal.itemTitle}".`,
+      });
+      setActiveModal(null);
+      setReasonText('');
+      setProcessingId(null);
+      return;
+    }
     try {
       const res = await fetch(`/api/reviews/${activeModal.itemId}`, {
         method: 'POST',

@@ -14,16 +14,26 @@ import {
   User,
   Plus,
   LogOut,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { offlineCoverage } from '@/lib/offline-demo';
 
 export default function CoveragePage() {
+  const { user } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
 
   useEffect(() => {
+    if (!user) return;
+    if (user.id.startsWith('demo-')) {
+      setData(offlineCoverage);
+      setSelectedCategory(offlineCoverage.categories.find((category) => category.category === 'Troubleshooting') || offlineCoverage.categories[0]);
+      setLoading(false);
+      return;
+    }
     fetch('/api/coverage')
       .then((res) => res.json())
       .then((json) => {
@@ -36,7 +46,7 @@ export default function CoveragePage() {
       })
       .catch((err) => console.error('Failed to load coverage:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   if (loading || !data) {
     return (

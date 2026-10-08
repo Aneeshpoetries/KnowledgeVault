@@ -12,7 +12,7 @@ import {
   AlertCircle,
   ShieldCheck,
   Lock,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { KnowledgeVaultLogo } from '@/components/ui/KnowledgeVaultLogo';
 
 function ResetPasswordForm() {

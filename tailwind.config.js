@@ -42,14 +42,18 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "sans-serif"],
+        sans: ["Inter Variable", "Inter", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "sans-serif"],
         mono: ["'JetBrains Mono'", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
+      fontSize: {
+        xs: ["0.8125rem", { lineHeight: "1.25rem" }],
+        sm: ["0.9375rem", { lineHeight: "1.4rem" }],
+      },
       borderRadius: {
-        "2xl":  "1rem",
-        "3xl":  "1.25rem",
-        "4xl":  "1.5rem",
-        "5xl":  "2rem",
+        "2xl":  "0.625rem",
+        "3xl":  "0.75rem",
+        "4xl":  "1rem",
+        "5xl":  "1.25rem",
       },
       boxShadow: {
         card:     "var(--shadow-card)",

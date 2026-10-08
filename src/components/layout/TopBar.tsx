@@ -19,7 +19,7 @@ import {
   Check,
   LogOut,
   UserCheck,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { DEMO_PROFILES } from '@/lib/demo-users';
@@ -66,6 +66,12 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
   }, []);
 
   useEffect(() => {
+    if (!authUser) return;
+    if (authUser?.id?.startsWith('demo-')) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
     fetch('/api/notifications')
       .then((res) => res.json())
       .then((data) => {
@@ -75,9 +81,20 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
         }
       })
       .catch(() => {});
-  }, [currentRole]);
+  }, [currentRole, authUser?.id]);
+
+  useEffect(() => {
+    function dismiss(event: KeyboardEvent) { if (event.key === 'Escape') { setRoleMenuOpen(false); setNotificationsOpen(false); } }
+    document.addEventListener('keydown', dismiss);
+    return () => document.removeEventListener('keydown', dismiss);
+  }, []);
 
   const markAllRead = async () => {
+    if (authUser?.id?.startsWith('demo-')) {
+      setUnreadCount(0);
+      setNotifications([]);
+      return;
+    }
     try {
       await fetch('/api/notifications', {
         method: 'PATCH',
@@ -106,17 +123,17 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
 
   const getRoleAccent = (role: UserRole) => {
     switch (role) {
-      case 'ADMIN':        return { bg: 'bg-[#FCA8CA]', text: 'text-[#8b1a4a]', pill: 'badge-role-admin' };
-      case 'MANAGER':      return { bg: 'bg-[#A0C4F6]', text: 'text-[#1a3f6b]', pill: 'badge-role-manager' };
-      case 'EMPLOYEE':     return { bg: 'bg-[#C8A2F9]', text: 'text-[#4a1a8b]', pill: 'badge-role-emp' };
-      case 'NEW_EMPLOYEE': return { bg: 'bg-[#F8BFA5]', text: 'text-[#7a3010]', pill: 'badge-role-new' };
+      case 'ADMIN':        return { bg: 'bg-[#462146]', text: 'text-[#FF89C7]', pill: 'badge-role-admin' };
+      case 'MANAGER':      return { bg: 'bg-[#262958]', text: 'text-[#93C8FF]', pill: 'badge-role-manager' };
+      case 'EMPLOYEE':     return { bg: 'bg-[#3D245B]', text: 'text-[#D7B7FF]', pill: 'badge-role-emp' };
+      case 'NEW_EMPLOYEE': return { bg: 'bg-[#482342]', text: 'text-[#FFB782]', pill: 'badge-role-new' };
     }
   };
 
   const activeColors = getRoleAccent(currentRole);
 
   return (
-    <header className="h-14 border-b border-vault-border bg-vault-surface/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between z-20 sticky top-0 select-none">
+    <header className="vault-topbar h-14 border-b border-vault-border bg-vault-surface/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between z-20 sticky top-0 select-none">
       {/* Left: Breadcrumbs */}
       <div className="flex items-center gap-1.5 text-xs text-vault-dim">
         {breadcrumbs.map((crumb, idx) => (
@@ -142,6 +159,7 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
           onClick={onOpenCommandPalette}
           className="flex items-center gap-2 px-3 py-1.5 rounded-2xl text-xs text-vault-muted bg-vault-subtle hover:text-vault-text border border-vault-border transition-all"
           title="Search Knowledge & Actions (Cmd+K)"
+          aria-label="Search knowledge and actions"
         >
           <Search className="w-3.5 h-3.5 text-vault-dim" />
           <span className="hidden sm:inline text-[12px]">Search...</span>
@@ -155,13 +173,14 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
           onClick={cycleTheme}
           className="p-2 rounded-xl text-vault-muted hover:text-vault-text hover:bg-vault-subtle transition-colors border border-transparent hover:border-vault-border"
           title={`Theme: ${theme}`}
+          aria-label={`Change theme, currently ${theme}`}
         >
           {theme === 'system' ? (
             <Laptop className="w-4 h-4" />
           ) : resolvedTheme === 'dark' ? (
-            <Moon className="w-4 h-4 text-[#C8A2F9]" />
+            <Moon className="w-4 h-4 text-[#C69AFF]" />
           ) : (
-            <Sun className="w-4 h-4 text-[#F8D4A7]" />
+            <Sun className="w-4 h-4 text-[#F7D480]" />
           )}
         </button>
 
@@ -169,21 +188,22 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
         <div className="relative">
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
+            aria-label="Notifications" aria-expanded={notificationsOpen}
             className="relative p-2 rounded-xl text-vault-muted hover:text-vault-text hover:bg-vault-subtle border border-transparent hover:border-vault-border transition-colors"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#F391AC]" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#492047]" />
             )}
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-vault-surface border border-vault-border rounded-3xl shadow-elevated overflow-hidden z-50 animate-slide-in">
+            <div className="absolute right-0 mt-2 w-[min(24rem,calc(100vw-24px))] bg-vault-surface border border-vault-border rounded-3xl shadow-elevated overflow-hidden z-50 animate-slide-in">
               <div className="flex items-center justify-between px-4 py-3 border-b border-vault-border">
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-semibold text-vault-text">Notifications</span>
                   {unreadCount > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F8D4A7] text-[#7a5510]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3B234A] text-[#F7D480]">
                       {unreadCount} new
                     </span>
                   )}
@@ -194,7 +214,7 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
                       Mark all read
                     </button>
                   )}
-                  <button onClick={() => setNotificationsOpen(false)} className="text-vault-dim hover:text-vault-text">
+                  <button aria-label="Close notifications" onClick={() => setNotificationsOpen(false)} className="text-vault-dim hover:text-vault-text">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -211,9 +231,9 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
                     >
                       <div className="mt-0.5 shrink-0">
                         {n.type === 'CRITICAL' ? (
-                          <ShieldAlert className="w-3.5 h-3.5 text-[#F391AC]" />
+                          <ShieldAlert className="w-3.5 h-3.5 text-[#FF75BF]" />
                         ) : n.type === 'WARNING' ? (
-                          <AlertTriangle className="w-3.5 h-3.5 text-[#F8BFA5]" />
+                          <AlertTriangle className="w-3.5 h-3.5 text-[#FFB782]" />
                         ) : (
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
                         )}
@@ -234,6 +254,7 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
         <div className="relative" ref={roleMenuRef}>
           <button
             onClick={() => setRoleMenuOpen(!roleMenuOpen)}
+            aria-label="Switch demo persona" aria-expanded={roleMenuOpen}
             className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-2xl border border-vault-border hover:bg-vault-subtle transition-all bg-vault-surface"
           >
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${activeColors.bg}`}>
@@ -285,12 +306,12 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
                         </div>
                         <p className="text-[11px] text-vault-dim truncate mt-0.5">{profile.title}</p>
                         {profile.name.includes('Rahul') && (
-                          <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#F8BFA5]/30 text-[#7a3010] mt-1">
+                          <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#F8BFA5]/30 text-[#FFB782] mt-1">
                             EXIT PENDING
                           </span>
                         )}
                         {profile.name.includes('Alex') && (
-                          <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#C8A2F9]/30 text-[#4a1a8b] mt-1">
+                          <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#C8A2F9]/30 text-[#D7B7FF] mt-1">
                             NEW HIRE
                           </span>
                         )}
@@ -312,7 +333,7 @@ export function TopBar({ onOpenCommandPalette, userName: propName, userRole: pro
                 </Link>
                 <button
                   onClick={() => { setRoleMenuOpen(false); logout(); }}
-                  className="text-[11px] text-[#F391AC] hover:text-[#e07090] transition-colors flex items-center gap-1"
+                  className="text-[11px] text-[#FF75BF] hover:text-[#e07090] transition-colors flex items-center gap-1"
                 >
                   <LogOut className="w-3 h-3" />
                   Sign out

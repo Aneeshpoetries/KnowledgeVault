@@ -1,0 +1,56 @@
+.kv-marketing{--paper:#f7f7f5;--ink:#232126;--plum:#705682;background:#f7f7f5}
+.kv-marketing .kv-header{background:#fafaf8ed;border-color:#e9e7e4}
+.kv-hero{width:100%;max-width:none;min-height:min(690px,calc(100svh - 76px));display:flex;justify-content:center;align-items:center;text-align:center;padding:94px 28px 98px;background:radial-gradient(ellipse 54% 42% at 50% 58%,#e8e0e9 0%,#f7f7f5 82%);overflow:hidden}
+.kv-hero:before{inset:auto auto -350px 50%;transform:translateX(-50%);width:min(1100px,100vw);height:760px;background:radial-gradient(ellipse,#d5c0da99 0%,#f0e7f066 36%,transparent 70%);filter:blur(26px)}
+.kv-hero:after{content:'';position:absolute;left:50%;bottom:-390px;transform:translateX(-50%);width:min(1300px,120vw);height:700px;border:1px solid #a792aa33;border-radius:50%;box-shadow:0 0 0 90px #a792aa12,0 0 0 180px #a792aa0a;pointer-events:none}
+.kv-hero-copy{z-index:1;width:min(950px,100%);margin:auto}
+.kv-hero .kv-eyebrow{justify-content:center;letter-spacing:.2em;font-size:10px}
+.kv-hero h1{font-size:clamp(72px,8vw,124px);font-weight:560;line-height:.99;letter-spacing:-.075em;margin:34px 0 28px}
+.kv-hero h1 span{color:#7c608c}
+.kv-hero-description{font-size:clamp(18px,1.55vw,23px);line-height:1.55;max-width:660px;margin-inline:auto;color:#645e66}
+.kv-hero .kv-actions{justify-content:center;margin-top:36px}
+.kv-hero .kv-button{min-height:55px;padding-inline:27px;font-size:13px;box-shadow:0 10px 25px #31253912}
+.kv-hero .kv-button-secondary{background:#ffffffa3;box-shadow:none}
+.kv-hero-foot{justify-content:center;gap:48px;margin-top:86px;color:#847c85}
+.kv-section{position:relative;padding-block:clamp(90px,9vw,150px);border:0;isolation:isolate}
+.kv-section:before{content:'';position:absolute;z-index:-1;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);background:#f7f7f5}
+.kv-section:nth-of-type(even):before{background:#f1f0ee}
+.kv-section-heading{max-width:900px;margin-bottom:58px}
+.kv-section-heading h2{font-size:clamp(48px,5.35vw,75px);line-height:1.04;letter-spacing:-.065em;font-weight:540;margin:24px 0}
+.kv-lead{font-size:clamp(17px,1.5vw,21px);max-width:710px;line-height:1.65;color:#6c666d}
+.kv-problem .kv-section-heading{max-width:1050px}
+.kv-problem .kv-section-heading h2{font-size:clamp(52px,6vw,82px)}
+.kv-fragments{gap:13px;align-items:stretch}
+.kv-fragments article{min-height:300px;border:1px solid #e6e2e4;border-radius:27px;padding:34px;background:#ffffffc7;box-shadow:0 12px 32px #30273208;transition:transform .3s,box-shadow .3s}
+.kv-fragments article:hover{transform:translateY(-6px);box-shadow:0 26px 55px #30273212}
+.kv-fragments article>svg{background:#f1ebf3;width:45px;height:45px;padding:11px;border-radius:15px;margin-bottom:31px;color:#755986}
+.kv-fragments h3{font-size:clamp(19px,1.8vw,25px);line-height:1.35}
+.kv-memory-graph,.kv-stage,.kv-answer-workspace,.kv-interview-workspace{box-shadow:0 28px 70px #2a202c12;border-color:#ddd7dc}
+.kv-memory-graph{height:560px;background:radial-gradient(circle at 50% 45%,#ffffff,#efeaef 82%);border-radius:34px}
+.kv-split{gap:clamp(52px,7vw,110px)}
+.kv-split .kv-section-heading{margin-bottom:0}
+.kv-split .kv-section-heading h2{font-size:clamp(44px,4.7vw,66px)}
+.kv-stage{border-radius:30px}
+#risk:before,#retrieve:before{background:#eae6eb}
+#interview:before{background:linear-gradient(145deg,#e6dfe9,#f3f0ef 64%,#e7eced)}
+#interview .kv-section-heading{max-width:920px}
+#trust:before{background:#f0efed}
+.kv-risk-layout{gap:28px}
+.kv-risk-summary{border-radius:28px}
+.kv-answer-workspace{border-radius:30px}
+.kv-capabilities{border:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.kv-capabilities>a,.kv-capabilities>a:first-child{border:1px solid #e8e3e8;border-radius:22px;background:#fff;padding:23px;min-height:220px;transition:transform .25s,box-shadow .25s}
+.kv-capabilities>a:hover{transform:translateY(-5px);box-shadow:0 18px 30px #30273210}
+.kv-capabilities>a>svg{background:#f0e9f3;width:45px;height:45px;padding:11px;border-radius:14px}
+.kv-final{width:100%;max-width:none;padding:140px 24px 150px;background:radial-gradient(ellipse 65% 55% at 50% 60%,#dfd1e4,#f7f7f5 90%)}
+.kv-final h2{font-size:clamp(56px,7vw,100px);line-height:.99;letter-spacing:-.07em}
+.kv-footer{width:min(1240px,calc(100% - 80px))}
+@media(max-width:800px){.kv-hero{min-height:640px;padding-block:70px 80px}.kv-hero h1{font-size:clamp(58px,10vw,83px)}.kv-hero-foot{gap:22px;margin-top:65px}.kv-fragments article{min-height:270px;padding:24px}.kv-split{gap:38px}.kv-capabilities{grid-template-columns:repeat(3,minmax(0,1fr))}.kv-capabilities>a,.kv-capabilities>a:first-child{min-height:190px;padding:20px}.kv-footer{width:calc(100% - 40px)}}
+@media(max-width:560px){.kv-hero{min-height:calc(100svh - 66px);padding:65px 20px 55px}.kv-hero h1{font-size:clamp(54px,12vw,74px)}.kv-hero-description{font-size:16px}.kv-hero .kv-actions{align-items:stretch}.kv-hero .kv-actions>*{width:100%}.kv-hero-foot{gap:8px;justify-content:space-between;margin-top:55px;font-size:7px}.kv-section{padding-block:80px}.kv-section-heading h2,.kv-problem .kv-section-heading h2{font-size:clamp(42px,11vw,57px)}.kv-split .kv-section-heading h2{font-size:clamp(40px,10vw,54px)}.kv-lead{font-size:16px}.kv-fragments article{min-height:0}.kv-memory-graph{height:auto}.kv-capabilities{grid-template-columns:repeat(2,minmax(0,1fr))}.kv-capabilities>a,.kv-capabilities>a:first-child{min-height:180px}.kv-final{padding-block:100px 110px}.kv-final h2{font-size:clamp(48px,12vw,70px)}}
+@media(prefers-reduced-motion:reduce){.kv-fragments article,.kv-capabilities>a{transition:none}}
+/* Visible brand geometry, kept outside the product demo. */
+.kv-hero{background:radial-gradient(ellipse 70% 72% at 50% 85%,#cbb6df 0%,#e6daef 45%,#f7f7f5 90%)}
+.kv-hero:before{background:radial-gradient(ellipse,#aa83c599 0%,#cfb7e780 40%,transparent 72%);filter:blur(18px)}
+.kv-hero:after{border-color:#8c68a66b;box-shadow:0 0 0 90px #9c79b529,0 0 0 180px #9c79b51c,0 0 0 270px #9c79b50d}
+#interview:before{background:radial-gradient(ellipse at 15% 70%,#cbb5dd,#e9e0ef 60%,#f3f0ef)}
+.kv-final{background:radial-gradient(ellipse 75% 80% at 50% 90%,#bca0d2,#e0cfea 60%,#f7f7f5 95%)}

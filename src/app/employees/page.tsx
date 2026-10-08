@@ -2,21 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, ArrowRight, User, ChevronRight, LogOut } from 'lucide-react';
+import { Users, ArrowRight, User, ChevronRight, LogOut } from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { offlineEmployees } from '@/lib/offline-demo';
 
 export default function EmployeesPage() {
+  const { user } = useAuth();
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
+    if (user.id.startsWith('demo-')) {
+      setEmployees(offlineEmployees);
+      setLoading(false);
+      return;
+    }
     fetch('/api/employees')
       .then((res) => res.json())
       .then((data) => setEmployees(data.employees || []))
       .catch((err) => console.error('Failed to load employees:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   return (
     <AppShell>

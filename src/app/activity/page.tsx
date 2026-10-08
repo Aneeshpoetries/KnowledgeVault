@@ -10,7 +10,7 @@ import {
   ShieldAlert,
   Layers,
   ArrowRight,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 
 export default function ActivityPage() {

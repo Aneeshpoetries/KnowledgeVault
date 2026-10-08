@@ -1,21 +1,20 @@
 export async function generateEmbedding(text: string): Promise<number[]> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
   const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-  const embeddingModel = process.env.EMBEDDING_MODEL || 'text-embedding-004';
+  const embeddingModel = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
 
   if (apiKey && apiKey.trim().length > 0 && !apiKey.includes('your-key')) {
     // ── Gemini native Embeddings API ──────────────────────────────────────────
     const isGemini =
       process.env.GEMINI_API_KEY ||
-      baseUrl.includes('generativelanguage.googleapis.com') ||
-      embeddingModel.startsWith('text-embedding-0');
+      baseUrl.includes('generativelanguage.googleapis.com');
 
     if (isGemini) {
       try {
         const geminiKey = process.env.GEMINI_API_KEY || apiKey;
-        const model = embeddingModel.startsWith('text-embedding-')
-          ? embeddingModel
-          : 'text-embedding-004';
+        const model = embeddingModel === 'text-embedding-004' || embeddingModel === 'text-embedding-3-small'
+          ? 'gemini-embedding-001'
+          : embeddingModel;
 
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${geminiKey}`,
@@ -25,6 +24,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
             body: JSON.stringify({
               model: `models/${model}`,
               content: { parts: [{ text: text.slice(0, 8000) }] },
+              outputDimensionality: 768,
             }),
           }
         );

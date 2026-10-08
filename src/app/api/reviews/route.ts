@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'This knowledge is outside your workspace.' }, { status: 403 });
     }
 
-    let whereClause: any = {
+    const whereClause: any = {
       status: { in: ['PENDING_REVIEW', 'NEEDS_REVISION'] },
     };
 

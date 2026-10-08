@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, User, FolderGit2, Cpu, Brain, Sparkles } from 'lucide-react';
+import { ArrowRight, User, FolderGit2, Cpu, Brain, Sparkles } from '@/components/ui/icons';
 
 interface LineageNode {
   type: 'employee' | 'project' | 'technology' | 'knowledge';
@@ -53,7 +53,7 @@ export function KnowledgeLineageMap() {
           <span className="text-[11px] font-mono uppercase tracking-wider text-vault-dim">
             Knowledge Lineage
           </span>
-          <span className="text-[11px] text-vault-muted">· Core dependency path</span>
+          <span className="text-[11px] text-vault-muted">· Example dependency path</span>
         </div>
         <Link
           href="/graph"
@@ -71,9 +71,13 @@ export function KnowledgeLineageMap() {
             const isActive = activeIdx === i;
             return (
               <React.Fragment key={node.title}>
-                <div
+                <button
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => setActiveIdx(i)}
+                  onFocus={() => setActiveIdx(i)}
                   onMouseEnter={() => setActiveIdx(i)}
-                  className={`w-full md:w-1/4 p-3 rounded-lg border transition-all cursor-pointer ${
+                  className={`w-full md:w-1/4 p-3 rounded-lg border transition-all cursor-pointer text-left ${
                     isActive
                       ? 'bg-vault-dark border-vault-border shadow-elevated scale-[1.02]'
                       : 'bg-vault-dark/50 border-vault-border/60 hover:border-vault-border'
@@ -90,7 +94,7 @@ export function KnowledgeLineageMap() {
                   </div>
                   <h4 className="text-xs font-semibold text-vault-text truncate">{node.title}</h4>
                   <p className="text-[11px] text-vault-muted truncate mt-0.5">{node.subtitle}</p>
-                </div>
+                </button>
 
                 {i < NODES.length - 1 && (
                   <div className="hidden md:flex items-center justify-center text-vault-dim shrink-0">
@@ -103,7 +107,7 @@ export function KnowledgeLineageMap() {
         </div>
 
         {/* Dynamic Context Detail */}
-        <div className="mt-3 pt-3 border-t border-vault-border/60 flex items-center justify-between text-xs text-vault-muted">
+        <div className="mt-3 pt-3 border-t border-vault-border/60 flex flex-col sm:flex-row gap-3 sm:items-center justify-between text-xs text-vault-muted">
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
             <span>
@@ -117,7 +121,7 @@ export function KnowledgeLineageMap() {
             href="/graph"
             className="text-[11px] font-mono text-indigo-400 hover:underline shrink-0 ml-2"
           >
-            Inspect in 3D / 2D Graph →
+            View knowledge graph →
           </Link>
         </div>
       </div>

@@ -36,7 +36,6 @@ export async function parseDocumentBuffer(
   // 3. PDF Files via pdf-parse
   if (ext === 'pdf') {
     try {
-      // @ts-ignore
       const pdfModule = await import('pdf-parse');
       const pdfParse = (pdfModule as any).default || pdfModule;
       const data = await (pdfParse as any)(buffer);

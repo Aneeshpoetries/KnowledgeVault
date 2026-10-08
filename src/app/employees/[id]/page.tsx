@@ -14,12 +14,16 @@ import {
   ArrowRight,
   LogOut,
   ChevronRight,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge, KnowledgeTypeBadge, ConfidenceBadge } from '@/components/ui/Badges';
 import { CoverageRing } from '@/components/ui/CoverageRing';
+import { useAuth } from '@/context/AuthContext';
+import { offlineEmployees } from '@/lib/offline-demo';
+import { demoKnowledge } from '@/lib/demo-store';
 
 export default function EmployeeDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const id = params?.id as string;
 
@@ -27,13 +31,19 @@ export default function EmployeeDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user) return;
+    if (user?.id?.startsWith('demo-')) {
+      const employee = offlineEmployees.find(item => item.id === id);
+      setData({ employee: employee && { ...employee, department: 'Core Engineering', knowledgeItems: demoKnowledge().filter(item => item.employee?.id === id) } });
+      setLoading(false);
+      return;
+    }
     fetch(`/api/employees/${id}`)
       .then((res) => res.json())
       .then((json) => setData(json))
       .catch((err) => console.error('Failed to load employee:', err))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, user?.id]);
 
   if (loading) {
     return (

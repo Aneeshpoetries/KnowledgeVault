@@ -2,21 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FolderGit2, ArrowRight, ChevronRight, Cpu } from 'lucide-react';
+import { FolderGit2, ArrowRight, ChevronRight, Cpu } from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { RiskBadge } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { offlineProjects } from '@/lib/offline-demo';
 
 export default function ProjectsPage() {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
+    if (user.id.startsWith('demo-')) {
+      setProjects(offlineProjects);
+      setLoading(false);
+      return;
+    }
     fetch('/api/projects')
       .then((res) => res.json())
       .then((data) => setProjects(data.projects || []))
       .catch((err) => console.error('Failed to load projects:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   return (
     <AppShell>

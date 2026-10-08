@@ -1,0 +1,3 @@
+export default function Loading() {
+  return <div role="status" aria-label="Loading workspace" className="space-y-6 w-full"><span className="sr-only">Loading your workspace…</span><div className="space-y-3"><div className="h-8 w-60 max-w-full rounded-xl bg-vault-subtle" /><div className="h-3 w-96 max-w-full rounded bg-vault-subtle" /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-5">{[0, 1, 2, 3].map(index => <div key={index} className="vault-panel h-44 p-6"><div className="h-4 w-32 rounded bg-vault-subtle" /><div className="h-8 w-20 rounded-lg bg-vault-subtle mt-7" /></div>)}</div></div>;
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 interface CoverageRingProps {
   score: number;
@@ -24,6 +24,7 @@ export function CoverageRing({
   atRisk,
   missing,
 }: CoverageRingProps) {
+  const reduced = useReducedMotion();
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const normalizedScore = Math.min(100, Math.max(0, Math.round(score)));
@@ -31,7 +32,7 @@ export function CoverageRing({
 
   const color =
     normalizedScore >= 70
-      ? '#6366F1' // indigo
+      ? 'var(--accent-indigo)'
       : normalizedScore >= 50
       ? '#06B6D4' // cyan
       : normalizedScore >= 35
@@ -46,7 +47,7 @@ export function CoverageRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#161F30"
+          stroke="var(--vault-subtle)"
           strokeWidth={strokeWidth}
           fill="transparent"
         />
@@ -55,7 +56,7 @@ export function CoverageRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#1E2638"
+          stroke="var(--vault-border)"
           strokeWidth={strokeWidth / 2}
           strokeDasharray="2 12"
           fill="transparent"
@@ -69,9 +70,9 @@ export function CoverageRing({
           stroke={color}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
+          initial={reduced ? false : { strokeDashoffset: circumference }}
           animate={{ strokeDashoffset }}
-          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: reduced ? 0 : .6, ease: [0.16, 1, 0.3, 1] }}
           strokeLinecap="round"
           fill="transparent"
         />
@@ -83,9 +84,9 @@ export function CoverageRing({
           {label}
         </span>
         <motion.span
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={reduced ? false : { opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: reduced ? 0 : .3 }}
           className="text-4xl sm:text-5xl font-semibold tracking-tight text-vault-text my-0.5"
         >
           {normalizedScore}%

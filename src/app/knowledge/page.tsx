@@ -13,7 +13,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Cpu,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import {
   RiskBadge,
@@ -21,8 +21,12 @@ import {
   KnowledgeTypeBadge,
   FreshnessBadge,
 } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { offlineKnowledge } from '@/lib/offline-demo';
+import { demoKnowledge, saveDemoKnowledge } from '@/lib/demo-store';
 
 export default function KnowledgePage() {
+  const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -34,6 +38,16 @@ export default function KnowledgePage() {
 
   const fetchItems = async () => {
     setLoading(true);
+    if (user?.id?.startsWith('demo-')) {
+      setItems(demoKnowledge().filter((item) =>
+        (typeFilter === 'ALL' || item.type === typeFilter) &&
+        (riskFilter === 'ALL' || item.risk === riskFilter) &&
+        (freshnessFilter === 'ALL' || item.freshness === freshnessFilter) &&
+        (!search.trim() || `${item.title} ${item.summary} ${item.content}`.toLowerCase().includes(search.trim().toLowerCase()))
+      ));
+      setLoading(false);
+      return;
+    }
     try {
       const params = new URLSearchParams();
       if (search) params.set('search', search);
@@ -52,8 +66,8 @@ export default function KnowledgePage() {
   };
 
   useEffect(() => {
-    fetchItems();
-  }, [typeFilter, riskFilter, freshnessFilter]);
+    if (user) fetchItems();
+  }, [user?.id, typeFilter, riskFilter, freshnessFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +78,13 @@ export default function KnowledgePage() {
     e.stopPropagation();
     e.preventDefault();
     setVerifyingId(itemId);
+    if (user?.id?.startsWith('demo-')) {
+      const next = demoKnowledge().map(item => item.id === itemId ? { ...item, freshness: 'FRESH', lastVerifiedAt: new Date().toISOString() } : item);
+      saveDemoKnowledge(next);
+      setItems(current => current.map(item => item.id === itemId ? { ...item, freshness: 'FRESH', lastVerifiedAt: new Date().toISOString() } : item));
+      setVerifyingId(null);
+      return;
+    }
     try {
       const res = await fetch(`/api/knowledge/${itemId}/verify`, { method: 'POST' });
       if (res.ok) {
@@ -237,26 +258,25 @@ export default function KnowledgePage() {
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-vault-border/40">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-4 sm:p-5">
               {items.map((item) => (
-                <Link
+                <article
                   key={item.id}
-                  href={`/knowledge/${item.id}`}
-                  className="group flex flex-col md:flex-row md:items-center justify-between p-4 vault-hover-row gap-3"
+                  className="group flex flex-col justify-between p-5 sm:p-6 rounded-3xl border border-vault-border bg-vault-surface vault-hover-row gap-5 min-w-0"
                 >
-                  <div className="flex-1 min-w-0 pr-4">
-                    <div className="flex items-center gap-2 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="space-y-3 mb-3">
                       <KnowledgeTypeBadge type={item.type} />
-                      <h3 className="text-xs sm:text-sm font-semibold text-vault-text truncate group-hover:text-indigo-400 transition-colors">
-                        {item.title}
+                      <h3 className="text-base font-semibold text-vault-text leading-snug hover:text-indigo-400 transition-colors">
+                        <Link href={`/knowledge/${item.id}`}>{item.title}</Link>
                       </h3>
                     </div>
 
-                    <p className="text-xs text-vault-muted line-clamp-1 mb-2">
+                    <p className="text-xs text-vault-muted leading-relaxed line-clamp-2 mb-4">
                       {item.summary || item.content}
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-vault-dim">
+                    <div className="flex flex-col gap-2 text-[11px] text-vault-dim break-words">
                       {item.project && (
                         <span>
                           Project: <strong className="text-vault-muted font-normal">{item.project.name}</strong>
@@ -269,14 +289,14 @@ export default function KnowledgePage() {
                       )}
                       {item.employee && (
                         <span>
-                          Author: <span className="text-vault-muted">{item.employee.name}</span>
+                          Owner: <span className="text-vault-muted">{item.employee.name}</span>
                         </span>
                       )}
                     </div>
                   </div>
 
                   {/* Metadata and Quick Actions */}
-                  <div className="flex items-center gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-vault-border/40">
+                  <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-vault-border/60">
                     <RiskBadge risk={item.risk} />
                     <ConfidenceBadge
                       confidence={item.confidence}
@@ -303,9 +323,9 @@ export default function KnowledgePage() {
                       </button>
                     )}
 
-                    <ChevronRight className="w-4 h-4 text-vault-dim group-hover:text-vault-text transition-colors" />
+                    <Link href={`/knowledge/${item.id}`} className="ml-auto inline-flex items-center gap-1 text-xs text-vault-muted hover:text-vault-text" aria-label={`View evidence for ${item.title}`}>Evidence<ChevronRight className="w-4 h-4" /></Link>
                   </div>
-                </Link>
+                </article>
               ))}
             </div>
           )}

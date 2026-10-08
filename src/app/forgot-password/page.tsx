@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   Mail, ArrowLeft, KeyRound, CheckCircle2, AlertCircle,
   Eye, EyeOff, ShieldCheck, RefreshCw, ArrowRight, Terminal,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { KnowledgeVaultLogo } from '@/components/ui/KnowledgeVaultLogo';
 
 type Step = 'email' | 'otp' | 'password' | 'done';
@@ -20,7 +20,7 @@ function StepIndicator({ step }: { step: Step }) {
         <React.Fragment key={n}>
           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 ${
             n < current
-              ? 'bg-[#F8D4A7] text-[#7a5510] shadow-sm'
+              ? 'bg-[#3B234A] text-[#F7D480] shadow-sm'
               : n === current
               ? 'bg-vault-text text-vault-dark ring-4 ring-vault-text/20'
               : 'bg-vault-subtle border border-vault-border text-vault-dim'
@@ -95,11 +95,11 @@ function OtpInput({ value, onChange }: { value: string[]; onChange: (v: string[]
 function PwStrength({ password }: { password: string }) {
   if (!password) return null;
   const strength =
-    password.length < 6  ? { label: 'Too short', color: 'bg-[#F391AC]', pct: 15 } :
-    password.length < 8  ? { label: 'Weak',      color: 'bg-[#F8BFA5]', pct: 40 } :
+    password.length < 6  ? { label: 'Too short', color: 'bg-[#492047]', pct: 15 } :
+    password.length < 8  ? { label: 'Weak',      color: 'bg-[#482342]', pct: 40 } :
     password.length < 12 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)
-                         ? { label: 'Good',      color: 'bg-[#F8D4A7]', pct: 70 }
-                         : { label: 'Strong',    color: 'bg-[#A0C4F6]', pct: 100 };
+                         ? { label: 'Good',      color: 'bg-[#3B234A]', pct: 70 }
+                         : { label: 'Strong',    color: 'bg-[#262958]', pct: 100 };
 
   return (
     <div className="mt-2 space-y-1">
@@ -196,8 +196,8 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md relative">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-2xl bg-[#F8D4A7] flex items-center justify-center shadow-sm">
-            <KnowledgeVaultLogo size={20} className="text-[#7a5510]" />
+          <div className="w-10 h-10 rounded-2xl bg-[#3B234A] flex items-center justify-center shadow-sm">
+            <KnowledgeVaultLogo size={20} className="text-[#F7D480]" />
           </div>
           <div>
             <span className="font-bold text-[15px] text-vault-text block leading-tight">KnowledgeVault AI</span>
@@ -206,7 +206,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-vault-surface border border-vault-border rounded-[2rem] p-8 shadow-card">
+        <div className="bg-vault-surface border border-vault-border rounded-xl p-8 shadow-card">
 
           {step !== 'done' && <StepIndicator step={step} />}
 
@@ -220,8 +220,8 @@ export default function ForgotPasswordPage() {
 
           {/* Error */}
           {error && (
-            <div className="mb-5 p-3.5 rounded-2xl bg-[#F391AC]/15 border border-[#F391AC]/30 text-[#8b0a30] text-[13px] flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#F391AC]" />
+            <div className="mb-5 p-3.5 rounded-2xl bg-[#F391AC]/15 border border-[#F391AC]/30 text-[#FF75BF] text-[13px] flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#FF75BF]" />
               <span>{error}</span>
             </div>
           )}
@@ -251,7 +251,7 @@ export default function ForgotPasswordPage() {
           {step === 'otp' && (
             <form onSubmit={handleVerifyOtp} className="space-y-5">
               {devCode && (
-                <div className="flex items-center gap-2 p-3 rounded-2xl bg-[#F8D4A7]/30 border border-[#F8D4A7]/50 text-[#7a5510] text-[12px]">
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-[#F8D4A7]/30 border border-[#F8D4A7]/50 text-[#F7D480] text-[12px]">
                   <Terminal className="w-3.5 h-3.5 shrink-0" />
                   <span>Dev mode — your code: <strong className="font-mono tracking-widest">{devCode}</strong></span>
                 </div>
@@ -308,7 +308,7 @@ export default function ForgotPasswordPage() {
                     {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {confirmPw && confirmPw !== password && <p className="text-[11px] text-[#8b0a30] mt-1.5 font-semibold">Passwords do not match</p>}
+                {confirmPw && confirmPw !== password && <p className="text-[11px] text-[#FF75BF] mt-1.5 font-semibold">Passwords do not match</p>}
                 {confirmPw && confirmPw === password && password.length >= 6 && (
                   <p className="text-[11px] text-[#10B981] mt-1.5 font-semibold flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Passwords match</p>
                 )}
@@ -327,7 +327,7 @@ export default function ForgotPasswordPage() {
           {step === 'done' && (
             <div className="flex flex-col items-center gap-4 py-4 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="w-16 h-16 rounded-full bg-[#A0C4F6]/30 border border-[#A0C4F6]/50 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-[#1a3f6b]" />
+                <CheckCircle2 className="w-8 h-8 text-[#93C8FF]" />
               </div>
               <div>
                 <p className="text-[16px] font-bold text-vault-text">Password Reset!</p>

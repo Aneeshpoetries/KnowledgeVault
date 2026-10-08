@@ -13,9 +13,10 @@ import {
   ShieldAlert,
   Sparkles,
   Info,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/context/AuthContext';
+import { demoKnowledge, demoReviews, saveDemoKnowledge, saveDemoReviews } from '@/lib/demo-store';
 
 export default function NewKnowledgePage() {
   const router = useRouter();
@@ -53,6 +54,28 @@ export default function NewKnowledgePage() {
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean);
+
+    if (user?.id?.startsWith('demo-')) {
+      const record = {
+        id: `demo-${Date.now()}`, title: title.trim(), type, risk, confidence: 0.85,
+        freshness: 'FRESH', status: 'PENDING_REVIEW',
+        summary: summary.trim() || content.trim().slice(0, 160), content: content.trim(),
+        whyItMatters: whyItMatters.trim() || 'Essential operational continuity procedure.',
+        problemsJson: JSON.stringify(problemList), solutionsJson: JSON.stringify(solutionList), dependenciesJson: '[]',
+        source: { name: 'Demo contribution', type: 'INTERVIEW' },
+        employee: { id: user.employeeId || user.id, name: user.name },
+        project: { id: projectId || 'demo-payment', name: 'Payment System' },
+        originalSourceText: content.trim(), verifiedBy: user.name,
+        lastVerifiedAt: new Date().toISOString(), createdAt: new Date().toISOString(),
+      };
+      saveDemoKnowledge([record, ...demoKnowledge()] as any);
+      saveDemoReviews([record, ...demoReviews()] as any);
+      setSubmitted(true);
+      setPendingReview(true);
+      setLoading(false);
+      setTimeout(() => router.push(user.role === 'EMPLOYEE' ? '/dashboard' : '/knowledge'), 1200);
+      return;
+    }
 
     try {
       const res = await fetch('/api/knowledge', {

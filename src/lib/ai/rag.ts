@@ -237,9 +237,9 @@ ${graphContext}`;
 
     const data = JSON.parse(rawAnswer);
     parsedResponse = {
-      answer: data.answer || data.recommendedAction || 'Refer to the cited organizational documents.',
+      answer: data.answer || data.recommendedAction || topMatches[0].item.summary || `Review the verified procedure in ${topMatches[0].item.title}.`,
       recommendedAction: data.recommendedAction,
-      why: data.why || 'Grounded in documented incident post-mortems and verified engineering practices.',
+      why: data.why || topMatches[0].item.whyItMatters || `This answer is supported by ${topMatches[0].item.title}.`,
       relevantContext: data.relevantContext || topMatches[0].item.summary,
       confidence: typeof data.confidence === 'number' ? data.confidence : topMatches[0].item.confidence,
     };

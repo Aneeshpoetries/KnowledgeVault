@@ -16,7 +16,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Check,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { AppShell } from '@/components/layout/AppShell';
 import { AccessForbidden } from '@/components/ui/AccessForbidden';
 import {
@@ -25,8 +25,12 @@ import {
   KnowledgeTypeBadge,
   FreshnessBadge,
 } from '@/components/ui/Badges';
+import { useAuth } from '@/context/AuthContext';
+import { offlineKnowledge } from '@/lib/offline-demo';
+import { demoKnowledge, saveDemoKnowledge } from '@/lib/demo-store';
 
 export default function KnowledgeDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
@@ -39,7 +43,12 @@ export default function KnowledgeDetailPage() {
   const [forbiddenMessage, setForbiddenMessage] = useState('');
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user) return;
+    if (user.id?.startsWith('demo-')) {
+      setItem(demoKnowledge().find((record) => record.id === id) || null);
+      setLoading(false);
+      return;
+    }
     fetch(`/api/knowledge/${id}`)
       .then(async (res) => {
         if (res.status === 403) {
@@ -56,10 +65,17 @@ export default function KnowledgeDetailPage() {
       })
       .catch((err) => console.error('Failed to load item:', err))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, user?.id]);
 
   const handleVerify = async () => {
     setVerifying(true);
+    if (user?.id?.startsWith('demo-')) {
+      const verifiedAt = new Date().toISOString();
+      saveDemoKnowledge(demoKnowledge().map(record => record.id === id ? { ...record, freshness: 'FRESH', lastVerifiedAt: verifiedAt, verifiedBy: user.name } : record));
+      setItem((current: any) => ({ ...current, freshness: 'FRESH', lastVerifiedAt: verifiedAt, verifiedBy: user.name }));
+      setVerifying(false);
+      return;
+    }
     try {
       const res = await fetch(`/api/knowledge/${id}/verify`, { method: 'POST' });
       if (res.ok) {
