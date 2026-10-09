@@ -12,6 +12,8 @@ import {
   Handle,
   Position,
   BackgroundVariant,
+  type Node,
+  type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import dagre from "@dagrejs/dagre";
@@ -110,8 +112,8 @@ export function ReactFlowGraph({
   selectedId: string;
   onSelect: (node: GraphNode) => void;
 }) {
-  const [rfNodes, setNodes, onNodesChange] = useNodesState([]);
-  const [rfEdges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [rfNodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [rfEdges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [isRendered, setIsRendered] = useState(false);
 
   useEffect(() => {
