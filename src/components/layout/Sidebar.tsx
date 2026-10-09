@@ -145,6 +145,12 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
 
   const { primary, workspaceTitle, workspace } = getNavSections();
 
+  const allNavItems = [...primary, ...workspace];
+  const bestMatch = allNavItems
+    .map(p => p.href)
+    .filter(href => pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/')))
+    .sort((a, b) => b.length - a.length)[0];
+
   const handleResetDemo = async () => {
     if (!confirm(authUser?.id?.startsWith('demo-') ? 'Reset this browser’s demo workspace to its original snapshot?' : 'Re-seed database with original NovaTech enterprise demo dataset?')) return;
     if (authUser?.id?.startsWith('demo-')) {
@@ -221,8 +227,7 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
           {primary.map((item: any) => {
             const Icon = item.icon;
             const isActive =
-              pathname === item.href ||
-              (item.href !== '/dashboard' && pathname.startsWith(item.href));
+              pathname === item.href || (item.href === bestMatch);
 
             return (
               <Link
@@ -271,8 +276,7 @@ export function Sidebar({ userRole: propRole, userName: propName, userAvatar }: 
           {workspace.map((item: any) => {
             const Icon = item.icon;
             const isActive =
-              pathname === item.href ||
-              (item.href !== '/dashboard' && pathname.startsWith(item.href));
+              pathname === item.href || (item.href === bestMatch);
 
             return (
               <Link
