@@ -15,14 +15,14 @@
   --vault-muted: #c7b8da;
   --vault-dim: #9583ae;
 
-  --accent-indigo: #a66aff;
-  --accent-indigo-bg: rgba(166, 106, 255, 0.14);
-  --accent-indigo-border: rgba(166, 106, 255, 0.35);
-  --accent-amber: #f0c75a;
-  --accent-rose: #f52aa8;
-  --accent-emerald: #b7f43a;
-  --accent-sky: #8fc6ff;
-  --accent-purple: #ba8bff;
+  --accent-indigo: #b07cff;
+  --accent-indigo-bg: rgba(176, 124, 255, 0.14);
+  --accent-indigo-border: rgba(176, 124, 255, 0.35);
+  --accent-amber: #ffd13b;
+  --accent-rose: #ff1f5a;
+  --accent-emerald: #10ff61;
+  --accent-sky: #4dc0ff;
+  --accent-purple: #c49eff;
 
   --card-gold: #38244a;
   --card-blue: #252150;
@@ -57,14 +57,14 @@
   --vault-text: #25212c;
   --vault-muted: #6b6474;
   --vault-dim: #827a8d;
-  --accent-indigo: #8252a1;
-  --accent-indigo-bg: rgba(130, 82, 161, 0.08);
-  --accent-indigo-border: rgba(130, 82, 161, 0.22);
-  --accent-rose: #a34983;
-  --accent-emerald: #328263;
-  --accent-amber: #a56e25;
-  --accent-sky: #417899;
-  --accent-purple: #8252a1;
+  --accent-indigo: #6a1b9a;
+  --accent-indigo-bg: rgba(106, 27, 154, 0.08);
+  --accent-indigo-border: rgba(106, 27, 154, 0.22);
+  --accent-rose: #e10032;
+  --accent-emerald: #00a846;
+  --accent-amber: #e67e00;
+  --accent-sky: #0077c2;
+  --accent-purple: #6a1b9a;
   --card-gold: #f5e6fd;
   --card-blue: #e7e5ff;
   --card-purple: #eadbff;

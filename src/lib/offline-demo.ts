@@ -14,6 +14,12 @@ export const offlineGraph = {
     { id: 'demo-timeout', label: 'Timeout Issue', type: 'PROBLEM', risk: 'HIGH', subtitle: 'Peak billing failures' },
     { id: 'demo-solution', label: 'Redis & Envoy Check', type: 'SOLUTION', subtitle: 'Verified recovery step' },
     { id: 'demo-knowledge', label: 'Failover Knowledge', type: 'KNOWLEDGE', subtitle: 'Tacit operational context' },
+    { id: 'demo-david', label: 'David Kim', type: 'EMPLOYEE', risk: 'MEDIUM', subtitle: 'Senior AI Engineer', concentrationRatio: 50 },
+    { id: 'demo-emma', label: 'Emma Watson', type: 'EMPLOYEE', risk: 'LOW', subtitle: 'Product Designer', concentrationRatio: 10 },
+    { id: 'demo-analytics', label: 'Analytics Platform', type: 'PROJECT', risk: 'HIGH', coverage: 62, subtitle: 'Data Engineering' },
+    { id: 'demo-portal', label: 'Customer Portal', type: 'PROJECT', risk: 'MEDIUM', coverage: 76, subtitle: 'Product Engineering' },
+    { id: 'demo-llm', label: 'LLM Limits', type: 'KNOWLEDGE', subtitle: 'BUSINESS_RULE' },
+    { id: 'demo-a11y', label: 'A11y Guidelines', type: 'KNOWLEDGE', subtitle: 'PROCESS' },
   ],
   edges: [
     { id: 'demo-e1', source: 'demo-rahul', target: 'demo-payment', type: 'OWNS' },
@@ -22,6 +28,12 @@ export const offlineGraph = {
     { id: 'demo-e4', source: 'demo-deploy', target: 'demo-timeout', type: 'ENCOUNTERS' },
     { id: 'demo-e5', source: 'demo-timeout', target: 'demo-solution', type: 'SOLVES' },
     { id: 'demo-e6', source: 'demo-rahul', target: 'demo-knowledge', type: 'OWNS' },
+    { id: 'demo-e7', source: 'demo-david', target: 'demo-analytics', type: 'WORKS_ON' },
+    { id: 'demo-e8', source: 'demo-emma', target: 'demo-portal', type: 'WORKS_ON' },
+    { id: 'demo-e9', source: 'demo-david', target: 'demo-llm', type: 'CREATED' },
+    { id: 'demo-e10', source: 'demo-emma', target: 'demo-a11y', type: 'CREATED' },
+    { id: 'demo-e11', source: 'demo-analytics', target: 'demo-llm', type: 'DOCUMENTS' },
+    { id: 'demo-e12', source: 'demo-portal', target: 'demo-a11y', type: 'DOCUMENTS' },
   ],
 };
 

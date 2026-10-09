@@ -181,6 +181,44 @@ async function main() {
     },
   });
 
+  const davidEmp = await prisma.employee.create({
+    data: {
+      name: 'David Kim',
+      role: 'Senior AI Engineer',
+      department: 'Machine Learning',
+      email: 'david.kim@novatech.demo',
+      managerId: marcusEmp.id,
+      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150',
+      bio: 'Lead engineer for NLP and RAG pipelines.',
+      riskLevel: 'MEDIUM',
+      knowledgeCoverage: 60.0,
+      criticalKnowledgeCount: 4,
+      atRiskKnowledgeCount: 6,
+      concentrationRatio: 50.0,
+      lifecycleStatus: 'ACTIVE',
+      joinedDate: new Date('2021-06-15'),
+    },
+  });
+
+  const emmaEmp = await prisma.employee.create({
+    data: {
+      name: 'Emma Watson',
+      role: 'Product Designer',
+      department: 'Design Systems & Portal',
+      email: 'emma.watson@novatech.demo',
+      managerId: sarahEmp.id,
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+      bio: 'UI/UX lead for customer facing dashboards.',
+      riskLevel: 'LOW',
+      knowledgeCoverage: 80.0,
+      criticalKnowledgeCount: 1,
+      atRiskKnowledgeCount: 2,
+      concentrationRatio: 10.0,
+      lifecycleStatus: 'ACTIVE',
+      joinedDate: new Date('2022-01-20'),
+    },
+  });
+
   // 2. Demo Users (Authentication accounts with passwordHash)
   await prisma.user.create({
     data: {
@@ -227,6 +265,30 @@ async function main() {
       title: 'Junior Developer',
       avatar: alexEmp.avatar,
       employeeId: alexEmp.id,
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: 'David Kim',
+      email: 'david.kim@novatech.demo',
+      passwordHash: defaultPasswordHash,
+      role: 'EMPLOYEE',
+      title: 'Senior AI Engineer',
+      avatar: davidEmp.avatar,
+      employeeId: davidEmp.id,
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: 'Emma Watson',
+      email: 'emma.watson@novatech.demo',
+      passwordHash: defaultPasswordHash,
+      role: 'EMPLOYEE',
+      title: 'Product Designer',
+      avatar: emmaEmp.avatar,
+      employeeId: emmaEmp.id,
     },
   });
 
@@ -295,6 +357,8 @@ async function main() {
       { employeeId: alexEmp.id, projectId: paymentProject.id, role: 'Onboarding Contributor' },
       { employeeId: arjunEmp.id, projectId: paymentProject.id, role: 'Infrastructure Lead' },
       { employeeId: priyaEmp.id, projectId: portalProject.id, role: 'Frontend Lead' },
+      { employeeId: davidEmp.id, projectId: analyticsProject.id, role: 'AI Lead' },
+      { employeeId: emmaEmp.id, projectId: portalProject.id, role: 'Design Lead' },
     ],
   });
 
@@ -639,8 +703,70 @@ async function main() {
     },
   });
 
+  const item6 = await prisma.knowledgeItem.create({
+    data: {
+      title: 'LLM Context Window Limits',
+      summary: 'Ensure RAG chunks do not exceed 4000 tokens.',
+      content: 'When querying the AI models, always truncate text chunks.',
+      originalSourceText: 'We hit a rate limit and context overflow yesterday.',
+      aiInterpretation: 'Technical limitation on LLM.',
+      whyItMatters: 'Prevents 400 errors from OpenAI.',
+      type: 'BUSINESS_RULE',
+      risk: 'MEDIUM',
+      importance: 7,
+      confidence: 0.90,
+      status: 'APPROVED',
+      visibility: 'PUBLIC',
+      freshness: 'FRESH',
+      lastVerifiedAt: new Date(),
+      verifiedBy: 'David Kim',
+      projectId: analyticsProject.id,
+      employeeId: davidEmp.id,
+      createdByEmployeeId: davidEmp.id,
+      reviewedByEmployeeId: davidEmp.id,
+      reviewedAt: new Date(),
+      sourceId: sourceRunbook.id,
+      tagsJson: JSON.stringify(['ai', 'llm', 'rag', 'limits']),
+      problemsJson: JSON.stringify(['Context overflow']),
+      solutionsJson: JSON.stringify(['Chunk size 4000']),
+      dependenciesJson: JSON.stringify(['OpenAI API']),
+      relatedEntitiesJson: JSON.stringify(['David Kim', 'Analytics Platform']),
+    },
+  });
+
+  const item7 = await prisma.knowledgeItem.create({
+    data: {
+      title: 'Color Accessibility Guidelines',
+      summary: 'Use WCAG AA standard colors in portal.',
+      content: 'All buttons must have a contrast ratio of 4.5:1.',
+      originalSourceText: 'Design spec v2.',
+      aiInterpretation: 'Design requirement.',
+      whyItMatters: 'Accessibility compliance.',
+      type: 'PROCESS',
+      risk: 'LOW',
+      importance: 6,
+      confidence: 0.95,
+      status: 'APPROVED',
+      visibility: 'PUBLIC',
+      freshness: 'FRESH',
+      lastVerifiedAt: new Date(),
+      verifiedBy: 'Emma Watson',
+      projectId: portalProject.id,
+      employeeId: emmaEmp.id,
+      createdByEmployeeId: emmaEmp.id,
+      reviewedByEmployeeId: emmaEmp.id,
+      reviewedAt: new Date(),
+      sourceId: sourceRunbook.id,
+      tagsJson: JSON.stringify(['design', 'a11y', 'colors']),
+      problemsJson: JSON.stringify([]),
+      solutionsJson: JSON.stringify(['WCAG AA compliant colors']),
+      dependenciesJson: JSON.stringify(['Figma']),
+      relatedEntitiesJson: JSON.stringify(['Emma Watson', 'Customer Portal']),
+    },
+  });
+
   // Generate embeddings for all items
-  const allItems = [item1, item2, item3, item4, item5, pendingItem1, pendingItem2, pendingItem3, restrictedItem];
+  const allItems = [item1, item2, item3, item4, item5, pendingItem1, pendingItem2, pendingItem3, restrictedItem, item6, item7];
   for (const it of allItems) {
     const textToEmbed = `${it.title} ${it.summary} ${it.content} ${it.type} ${it.whyItMatters}`;
     const vec = generateDeterministicEmbedding(textToEmbed);

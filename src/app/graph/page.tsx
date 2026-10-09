@@ -12,7 +12,7 @@ import {
   X,
   ArrowRight,
 } from "@/components/ui/icons";
-import { KnowledgeHierarchy } from "@/components/graph/KnowledgeHierarchy";
+import { ReactFlowGraph } from "@/components/graph/ReactFlowGraph";
 import {
   GraphNode,
   GraphData,
@@ -182,17 +182,12 @@ export default function GraphPage() {
                 <ChevronRight size={13} />
                 <span>{project?.label || "All entities"}</span>
               </div>
-              <KnowledgeHierarchy
+              <ReactFlowGraph
                 nodes={context}
-                project={project}
+                edges={data.edges}
                 selectedId={selectedId}
-                search={search}
                 onSelect={inspect}
               />
-              <p className="map-footnote">
-                Grouped by role in the project. Select an entity to inspect its
-                actual relationships.
-              </p>
             </section>
             {selected && (
               <aside
