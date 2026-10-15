@@ -5,7 +5,7 @@
 
 ---
 
-## 📌 Executive Overview
+##  Executive Overview
 
 Critical organizational knowledge often lives inside employees' heads, old chats, incident post-mortems, emails, documents, meeting discussions, code comments, and undocumented workflows. When experienced staff leave, organizations suffer acute brain drain, and successors spend months rebuilding context.
 
